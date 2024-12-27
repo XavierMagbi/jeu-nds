@@ -1,0 +1,15 @@
+#ifndef TIMER_H
+#define TIMER_H
+
+#include <nds.h>
+
+// Callback type for the timer
+typedef void (*TimerCallback)(void);
+
+// Function prototypes
+void setTimerCallback(TimerCallback callback);
+void initTimer();
+void timer_ISR();
+
+#endif
+
