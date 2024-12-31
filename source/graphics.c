@@ -17,8 +17,6 @@ u16 *Pipegfx;
 Pipe pipes[NUM_PIPES];
 
 
-
-
 // Main engine configuration 
 
 void initBackground() {
@@ -59,11 +57,6 @@ void drawPipes() {
         }
     }
 }
-
-
-// Fonction pour initialiser l'oiseau
-
-
 
 
 
@@ -122,30 +115,25 @@ void displayStartScreen() {
     }
 }
 
-void configureBird() {
-    // Map VRAM_B for the bird sprite
+
+
+void configureSprites(){
+     // Map VRAM_B for the bird sprite
     VRAM_B_CR = VRAM_ENABLE | VRAM_B_MAIN_SPRITE_0x06400000;
 
-    // Allocate space for the bird graphic
+
+
+    oamInit(&oamMain, SpriteMapping_1D_32, false);
     gfx = oamAllocateGfx(&oamMain, SpriteSize_32x32, SpriteColorFormat_256Color);
+    Pipegfx = oamAllocateGfx(&oamMain, SpriteSize_32x32, SpriteColorFormat_256Color);
 
     // Load bird sprite palette and tiles
     dmaCopy(birdPal, SPRITE_PALETTE , birdPalLen); // Load bird palette at index 0
-    dmaCopy(birdTiles, gfx, birdTilesLen);            // Load bird tiles
-}
-
-void configurePipe() {
-    // Map VRAM_C for the pipe sprite
-    VRAM_B_CR = VRAM_ENABLE | VRAM_B_MAIN_SPRITE_0x06400000;
-
-    // Allocate space for the pipe graphic
-    Pipegfx = oamAllocateGfx(&oamMain, SpriteSize_32x32, SpriteColorFormat_256Color);
-
-    // Load pipe sprite palette and tiles
     dmaCopy(pipesPal, &SPRITE_PALETTE[birdPalLen/2], pipesPalLen);
-    dmaCopy(pipesTiles , Pipegfx, pipesTilesLen );         // Load pipe tiles
-}
+    dmaCopy(birdTiles, gfx, birdTilesLen); 
+    dmaCopy(pipesTiles , Pipegfx, pipesTilesLen);         // Load pipe tiles           // Load bird tiles
 
+}
 
 void initPipes() {
     for (int i = 0; i < NUM_PIPES; i++) {
@@ -211,7 +199,6 @@ void initSubMenuSprites() {
 
     // Charge les graphismes des boutons
     dmaCopy(start_buttonTiles, startButtonSubGfx, start_buttonTilesLen);
-
 
     // Charge la palette des sprites
     dmaCopy(start_buttonPal, SPRITE_PALETTE_SUB, start_buttonPalLen);

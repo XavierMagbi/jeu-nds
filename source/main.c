@@ -27,8 +27,7 @@ int gameState = GAME_STATE_WAITING;
 int main(){
 
     initBackground();
-    configureBird();
-    configurePipe();
+    configureSprites();
     oamInit(&oamMain, SpriteMapping_1D_32, false);
     gameState = GAME_STATE_WAITING;
 
@@ -71,11 +70,10 @@ int main(){
 
             
             setBirdPosition(SPRITE_BIRD,birdX,birdY);
-            setPipePosition( SPRITE_PIPE ,120,120);
-            
+            setPipePosition(SPRITE_PIPE ,120,120);
         }
 
-        
+    
         swiWaitForVBlank();
 
         oamUpdate(&oamMain);
