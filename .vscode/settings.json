@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "simulation.h": "c"
+        "simulation.h": "c",
+        "bird.h": "c",
+        "graphics.h": "c"
     }
 }
