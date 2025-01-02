@@ -3,6 +3,12 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
+// Constants of the game 
+#define GAME_STATE_WAITING 0
+#define GAME_STATE_PLAYING 1
+#define GROUNDLEVEL 128
+#define JUMPFORCE -10 
+#define GRAVITY 1
 
 // Sprite indices
 #define SPRITE_BIRD 0
@@ -16,17 +22,14 @@
 #define	BIRD_WIDTH	32
 #define	BIRD_HEIGHT	32
 
+// Pipes Dimensions & Variables 
 #define PIPE_WIDTH 32
-#define PIPE_HEIGHT 192
+#define PIPE_HEIGHT 64
 #define PIPE_GAP 60
 #define NUM_PIPES 4
+#define PIPE_INIT_X 140
+#define PIPE_INIT_Y GROUNDLEVEL- 32
 
-// Constants of the game 
-#define GAME_STATE_WAITING 0
-#define GAME_STATE_PLAYING 1
-#define GROUNDLEVEL 128
-#define JUMPFORCE -10 
-#define GRAVITY 1
 
 
 typedef struct {

@@ -2,6 +2,7 @@
     "files.associations": {
         "simulation.h": "c",
         "bird.h": "c",
-        "graphics.h": "c"
+        "graphics.h": "c",
+        "background2.h": "c"
     }
 }

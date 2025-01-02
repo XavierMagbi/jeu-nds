@@ -3,9 +3,9 @@
 #include <stdio.h>
 #include <nds/arm9/background.h>
 #include "graphics.h"
-#include "ball.h"
 #include "bird.h"
-#include "pipes.h"
+#include "pipe1.h"
+#include "pipe2.h"
 
 
 int keys; 
@@ -46,7 +46,7 @@ int main(){
 
         if (gameState == GAME_STATE_WAITING) {
             setBirdPosition(SPRITE_BIRD,birdX_init,birdY_init);
-            setPipePosition( SPRITE_PIPE ,120,120);
+            setPipePosition(SPRITE_PIPE ,PIPE_INIT_X,PIPE_INIT_Y);
         }
 
        
@@ -70,7 +70,7 @@ int main(){
 
             
             setBirdPosition(SPRITE_BIRD,birdX,birdY);
-            setPipePosition(SPRITE_PIPE ,120,120);
+            updatePipes();
         }
 
     

@@ -2,7 +2,8 @@
 #include "graphics.h"
 #include <nds/arm9/background.h>
 #include"bird.h"
-#include "pipes.h"
+#include "pipe1.h"
+#include "pipe2.h"
 #include "start_button.h"
 #include "Menu.h"
 #include "background2.h" // GRIT file for background tiles
@@ -13,6 +14,7 @@
 int scrollX = 0;
 u16 *gfx;
 u16 *Pipegfx;
+u16 *Pipegfx2;
 
 Pipe pipes[NUM_PIPES];
 
@@ -43,7 +45,7 @@ void setBirdPosition(int index, int x, int y) {
 }
 
 void setPipePosition(int index, int x, int y) {
-    oamSet(&oamMain, index, x, y, 0, 0, SpriteSize_32x32, SpriteColorFormat_256Color, Pipegfx, -1, false, false, false, false, false);
+    oamSet(&oamMain, index, x, y, 0, 0, SpriteSize_64x64, SpriteColorFormat_256Color, Pipegfx, -1, false, false, false, false, false);
 }
 
 void drawPipes() {
@@ -115,8 +117,6 @@ void displayStartScreen() {
     }
 }
 
-
-
 void configureSprites(){
      // Map VRAM_B for the bird sprite
     VRAM_B_CR = VRAM_ENABLE | VRAM_B_MAIN_SPRITE_0x06400000;
@@ -125,13 +125,16 @@ void configureSprites(){
 
     oamInit(&oamMain, SpriteMapping_1D_32, false);
     gfx = oamAllocateGfx(&oamMain, SpriteSize_32x32, SpriteColorFormat_256Color);
-    Pipegfx = oamAllocateGfx(&oamMain, SpriteSize_32x32, SpriteColorFormat_256Color);
+    Pipegfx = oamAllocateGfx(&oamMain, SpriteSize_64x64, SpriteColorFormat_256Color);
+    Pipegfx2 = oamAllocateGfx(&oamMain, SpriteSize_64x64, SpriteColorFormat_256Color);
 
     // Load bird sprite palette and tiles
     dmaCopy(birdPal, SPRITE_PALETTE , birdPalLen); // Load bird palette at index 0
-    dmaCopy(pipesPal, &SPRITE_PALETTE[birdPalLen/2], pipesPalLen);
-    dmaCopy(birdTiles, gfx, birdTilesLen); 
-    dmaCopy(pipesTiles , Pipegfx, pipesTilesLen);         // Load pipe tiles           // Load bird tiles
+    dmaCopy(pipe1Pal, &SPRITE_PALETTE[birdPalLen/2], pipe1PalLen);
+    dmaCopy(pipe1Pal, &SPRITE_PALETTE[pipe1PalLen/2], pipe1PalLen);
+    dmaCopy(birdTiles, gfx, birdTilesLen); // Load bird tiles
+    dmaCopy(pipe1Tiles , Pipegfx, pipe1TilesLen);   // Load pipe tiles
+    dmaCopy(pipe2Tiles , Pipegfx2, pipe2TilesLen);              // Load bird tiles
 
 }
 
@@ -144,17 +147,24 @@ void initPipes() {
 }
 
 void updatePipes() {
-    for (int i = 0; i < NUM_PIPES; i++) {
-        pipes[i].x -= 2; // Move pipes to the left
 
-        // Reset pipe when it goes off-screen
+    int pipe_x = PIPE_INIT_X;
+    int pipe_y = PIPE_INIT_Y ;
+    for (int i = 0; i < NUM_PIPES; i++) {
+        // Les pipes bougent à la même vitesse que le background
+        pipe_x -= (1 + scrollX % 256); // Ajustez la vitesse relative si nécessaire
+        setPipePosition(SPRITE_PIPE,pipe_x,pipe_y);
+        /*
+        // Réinitialiser le pipe lorsqu'il sort de l'écran
         if (pipes[i].x + PIPE_WIDTH < 0) {
             pipes[i].x = SCREEN_WIDTH;
-            pipes[i].y = rand() % (SCREEN_HEIGHT - PIPE_GAP);
+            pipes[i].y = rand() % (SCREEN_HEIGHT - PIPE_GAP); // Nouvelle hauteur aléatoire
             pipes[i].active = true;
         }
+        */
     }
 }
+
 
 
 void checkCollisions() {
