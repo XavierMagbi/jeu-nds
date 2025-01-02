@@ -22,21 +22,28 @@
 #define	BIRD_WIDTH	32
 #define	BIRD_HEIGHT	32
 
+// Bird's coordinates 
+#define BIRDX_INIT 0
+#define BIRDY_INIT SCREEN_HEIGHT / 2
+
+
 // Pipes Dimensions & Variables 
-#define PIPE_WIDTH 32
+#define PIPE_WIDTH 52
 #define PIPE_HEIGHT 64
 #define PIPE_GAP 60
-#define NUM_PIPES 4
+#define NUM_PIPES 2
 #define PIPE_INIT_X 140
 #define PIPE_INIT_Y GROUNDLEVEL- 32
 
 
 
 typedef struct {
-    int x;     // Position horizontale
-    int y;     // Position du haut du gap
-    bool active;
+    int x;            // Position horizontale du pipe
+    int y;            // Position verticale du haut du gap
+    int width;        // Largeur du pipe
+    int height;       // Hauteur du pipe (si nécessaire)
 } Pipe;
+
 
 extern Pipe pipes[NUM_PIPES];
 
@@ -81,7 +88,6 @@ void displayStartScreen();
 void configureSprites();
 void initPipes();
 void updatePipes();
-void drawPipes();
 void checkCollisions();
 
 

@@ -14,10 +14,8 @@ int score = 0;    // Score initial
 int blinkCounter = 0;    // Compteur pour gérer le clignotement
 bool showMessage = true; // Indique si le message est affiché
 
-int birdX = SCREEN_WIDTH / 2; // Center of the screen horizontally
-float birdY = SCREEN_HEIGHT / 2;      // Starts at the ground
-float birdX_init = SCREEN_WIDTH / 2;
-float birdY_init = SCREEN_HEIGHT / 2;
+int birdX = BIRDX_INIT; // Center of the screen horizontally
+float birdY = BIRDY_INIT ;      // Starts at the ground
 int birdVelocity = 0;         // Initial velocity (stationary)
 bool isJumping = false;       // Tracks whether the bird is mid-jump
 
@@ -45,7 +43,7 @@ int main(){
         }
 
         if (gameState == GAME_STATE_WAITING) {
-            setBirdPosition(SPRITE_BIRD,birdX_init,birdY_init);
+            setBirdPosition(SPRITE_BIRD,BIRDX_INIT,BIRDY_INIT);
             setPipePosition(SPRITE_PIPE ,PIPE_INIT_X,PIPE_INIT_Y);
         }
 
@@ -63,13 +61,10 @@ int main(){
             if ((keys & KEY_B) && birdY > 0) {
                 birdY += JUMPFORCE; 
             }
-            
-            if (birdY >= GROUNDLEVEL) {
-                resetGame();
-            } 
 
-            
+            checkCollisions(); // Check for collisions
             setBirdPosition(SPRITE_BIRD,birdX,birdY);
+
             updatePipes();
         }
 

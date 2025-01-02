@@ -46,21 +46,8 @@ void setBirdPosition(int index, int x, int y) {
 
 void setPipePosition(int index, int x, int y) {
     oamSet(&oamMain, index, x, y, 0, 0, SpriteSize_64x64, SpriteColorFormat_256Color, Pipegfx, -1, false, false, false, false, false);
+    oamSet(&oamMain, index+1, x, 0, 0, 0, SpriteSize_64x64, SpriteColorFormat_256Color, Pipegfx, -1, false, false, false, true, false);
 }
-
-void drawPipes() {
-    for (int i = 0; i < NUM_PIPES; i++) {
-        if (pipes[i].active) {
-            // Top pipe
-            setPipePosition(i * 2, pipes[i].x, pipes[i].y - PIPE_HEIGHT);
-
-            // Bottom pipe
-            setPipePosition(i * 2 + 1, pipes[i].x, pipes[i].y + PIPE_GAP);
-        }
-    }
-}
-
-
 
 
 // Fonction pour initialiser le jeu
@@ -134,26 +121,35 @@ void configureSprites(){
     dmaCopy(pipe1Pal, &SPRITE_PALETTE[pipe1PalLen/2], pipe1PalLen);
     dmaCopy(birdTiles, gfx, birdTilesLen); // Load bird tiles
     dmaCopy(pipe1Tiles , Pipegfx, pipe1TilesLen);   // Load pipe tiles
-    dmaCopy(pipe2Tiles , Pipegfx2, pipe2TilesLen);              // Load bird tiles
+    dmaCopy(pipe1Tiles , Pipegfx2, pipe1TilesLen);              // Load bird tiles
 
 }
 
 void initPipes() {
+
+    /*
     for (int i = 0; i < NUM_PIPES; i++) {
         pipes[i].x = SCREEN_WIDTH + i * 100; // Offset pipes
         pipes[i].y = rand() % (SCREEN_HEIGHT - PIPE_GAP); // Random height
         pipes[i].active = true;
     }
+    */
+
 }
 
 void updatePipes() {
 
-    int pipe_x = PIPE_INIT_X;
-    int pipe_y = PIPE_INIT_Y ;
+    for (int i = 0; i < NUM_PIPES; i++){
+
+        pipes[i].x = PIPE_INIT_X;  // Offset pipes
+        pipes[i].y =  PIPE_INIT_Y*i;
+
+    }
+
     for (int i = 0; i < NUM_PIPES; i++) {
         // Les pipes bougent à la même vitesse que le background
-        pipe_x -= (1 + scrollX % 256); // Ajustez la vitesse relative si nécessaire
-        setPipePosition(SPRITE_PIPE,pipe_x,pipe_y);
+        pipes[i].x-= (1 + scrollX % 256); // Ajustez la vitesse relative si nécessaire
+        setPipePosition(SPRITE_PIPE, pipes[i].x , pipes[i].y);
         /*
         // Réinitialiser le pipe lorsqu'il sort de l'écran
         if (pipes[i].x + PIPE_WIDTH < 0) {
@@ -165,19 +161,30 @@ void updatePipes() {
     }
 }
 
-
-
 void checkCollisions() {
+    // Check ground and ceiling collision
+    if (birdY >= GROUNDLEVEL || birdY <= 0) {
+        // Collision with ground or ceiling
+        resetGame();
+        iprintf("Game Over: Bird hit the ground or ceiling.\n");
+        return;
+    }
+
+    // Check pipe collisions
     for (int i = 0; i < NUM_PIPES; i++) {
-        if (pipes[i].active) {
+            // Horizontal collision check
             if (birdX + BIRD_WIDTH > pipes[i].x && birdX < pipes[i].x + PIPE_WIDTH) {
+                // Vertical collision check
                 if (birdY < pipes[i].y || birdY + BIRD_HEIGHT > pipes[i].y + PIPE_GAP) {
-                    gameState = GAME_STATE_WAITING; // Game over
+                    // Collision with the pipe
+                    resetGame();
+                    iprintf("Game Over: Bird collided with a pipe.\n");
+                    return;
                 }
             }
         }
     }
-}
+
 
 
 // Sub engine configuration 
