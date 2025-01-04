@@ -34,6 +34,17 @@ void initBackground() {
     dmaCopy(background2Pal, BG_PALETTE, background2PalLen);
 }
 
+void resetPipe() {
+    for(int i = 0; i < NUM_PIPES; i++) {
+    
+        pipes[i].x = PIPE_INIT_X;
+        pipes[i].y = PIPE_INIT_Y*i;
+        //setPipePosition(SPRITE_PIPE, PIPE_INIT_X , pipes[i].y);
+      
+    }
+    
+}
+
 
 void updateBackground() {
     scrollX = (scrollX + 1) % 256; // Wrap around when reaching the end
@@ -50,6 +61,9 @@ void setPipePosition(int index, int x, int y) {
 }
 
 
+
+
+
 // Fonction pour initialiser le jeu
 void initGame() {
     //gameState = GAME_STATE_WAITING; // État initial du jeu
@@ -64,9 +78,13 @@ void initGame() {
 void resetGame() {
     score = 0;                     // Score réinitialisé
     gameState = GAME_STATE_WAITING; // Retour à l'état d'attente
+    birdX = BIRDX_INIT;
+    birdY = BIRDY_INIT;
 
+    //resetPipe();
     consoleClear();                // Efface l'écran de la console
-    iprintf("Appuyez sur A pour rejouer\n");
+    iprintf("Ne marce pas\n");
+    
 }
 
 void handleInput() {
@@ -127,37 +145,40 @@ void configureSprites(){
 
 void initPipes() {
 
-    /*
-    for (int i = 0; i < NUM_PIPES; i++) {
-        pipes[i].x = SCREEN_WIDTH + i * 100; // Offset pipes
-        pipes[i].y = rand() % (SCREEN_HEIGHT - PIPE_GAP); // Random height
-        pipes[i].active = true;
-    }
-    */
+    for (int i = 0; i < NUM_PIPES; i++){
 
+        pipes[i].x = PIPE_INIT_X;  // Offset pipes
+        pipes[i].y = PIPE_INIT_Y*i;
+
+    }
 }
 
 void updatePipes() {
-
+    /*
     for (int i = 0; i < NUM_PIPES; i++){
 
         pipes[i].x = PIPE_INIT_X;  // Offset pipes
         pipes[i].y =  PIPE_INIT_Y*i;
 
     }
+    */
 
+    
+    //pipes[SPRITE_PIPE].x-= (1 + scrollX % 256); // Ajustez la vitesse relative si nécessaire
+    //setPipePosition(SPRITE_PIPE, pipes[SPRITE_PIPE].x , pipes[SPRITE_PIPE].y);
     for (int i = 0; i < NUM_PIPES; i++) {
         // Les pipes bougent à la même vitesse que le background
-        pipes[i].x-= (1 + scrollX % 256); // Ajustez la vitesse relative si nécessaire
+        pipes[i].x-= 1;//(1 + scrollX % 256); // Ajustez la vitesse relative si nécessaire
         setPipePosition(SPRITE_PIPE, pipes[i].x , pipes[i].y);
-        /*
+        
         // Réinitialiser le pipe lorsqu'il sort de l'écran
         if (pipes[i].x + PIPE_WIDTH < 0) {
             pipes[i].x = SCREEN_WIDTH;
-            pipes[i].y = rand() % (SCREEN_HEIGHT - PIPE_GAP); // Nouvelle hauteur aléatoire
-            pipes[i].active = true;
+            //pipes[i].y = rand() % (SCREEN_HEIGHT - PIPE_GAP - PIPE_HEIGHT) + PIPE_HEIGHT;
+            //pipes[i].y = rand() % (SCREEN_HEIGHT - PIPE_GAP); // Nouvelle hauteur aléatoire
+            //pipes[i].active = true;
         }
-        */
+        
     }
 }
 
@@ -169,22 +190,40 @@ void checkCollisions() {
         iprintf("Game Over: Bird hit the ground or ceiling.\n");
         return;
     }
-
+    
     // Check pipe collisions
     for (int i = 0; i < NUM_PIPES; i++) {
             // Horizontal collision check
             if (birdX + BIRD_WIDTH > pipes[i].x && birdX < pipes[i].x + PIPE_WIDTH) {
-                // Vertical collision check
+                if (i % 2 == 0) {
+                    if (birdY < (pipes[i].y+64)) {
+                        resetGame();
+                        iprintf("Game Over: Bird collided with a pipe.\n");
+                        return;
+                    }
+                } 
+                else {
+                    if (birdY + BIRD_HEIGHT > pipes[i].y) {
+                    resetGame();
+                    iprintf("Game Over: Bird collided with a pipe.\n");
+                    return;
+                    }
+                
+                    }
+            }
+        }
+        
+        
+    }
+// Vertical collision check
+                /*
                 if (birdY < pipes[i].y || birdY + BIRD_HEIGHT > pipes[i].y + PIPE_GAP) {
                     // Collision with the pipe
                     resetGame();
                     iprintf("Game Over: Bird collided with a pipe.\n");
                     return;
                 }
-            }
-        }
-    }
-
+                */
 
 
 // Sub engine configuration 
@@ -220,5 +259,7 @@ void initSubMenuSprites() {
     // Charge la palette des sprites
     dmaCopy(start_buttonPal, SPRITE_PALETTE_SUB, start_buttonPalLen);
 }
+
+//****************************************NEW CODE
 
 

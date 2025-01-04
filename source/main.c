@@ -19,11 +19,28 @@ float birdY = BIRDY_INIT ;      // Starts at the ground
 int birdVelocity = 0;         // Initial velocity (stationary)
 bool isJumping = false;       // Tracks whether the bird is mid-jump
 
-int gameState = GAME_STATE_WAITING;
+int gameState = GAME_STATE_INIT;
+
+
+void printPipes() {
+    iprintf("----- Pipes List -----\n");
+    for(int i = 0; i < NUM_PIPES; i++) {
+        iprintf("Pipe %d: x = %d, y = %d\n", 
+                i+1, 
+                pipes[i].x, 
+                pipes[i].y);
+                
+    }
+    //iprintf("BIRD: x = %d, y = %d\n", birdX, (int)birdY);
+
+
+
+    iprintf("----------------------\n");
+}
 
 
 int main(){
-
+    consoleDemoInit();
     initBackground();
     configureSprites();
     oamInit(&oamMain, SpriteMapping_1D_32, false);
@@ -36,7 +53,8 @@ int main(){
 
        
         if (gameState == GAME_STATE_WAITING) {
-            
+            //setBirdPosition(SPRITE_BIRD,BIRDX_INIT,BIRDY_INIT);
+            //setPipePosition(SPRITE_PIPE ,PIPE_INIT_X,PIPE_INIT_Y);
             if (keys & KEY_START) {
                 gameState = GAME_STATE_PLAYING;
             }
@@ -44,7 +62,11 @@ int main(){
 
         if (gameState == GAME_STATE_WAITING) {
             setBirdPosition(SPRITE_BIRD,BIRDX_INIT,BIRDY_INIT);
+            initPipes();
             setPipePosition(SPRITE_PIPE ,PIPE_INIT_X,PIPE_INIT_Y);
+            //resetPipe();
+            printPipes();
+            
         }
 
        
@@ -66,6 +88,7 @@ int main(){
             setBirdPosition(SPRITE_BIRD,birdX,birdY);
 
             updatePipes();
+            printPipes(); 
         }
 
     
@@ -76,5 +99,4 @@ int main(){
 
     return 0;
 }
-
 

@@ -6,6 +6,7 @@
 // Constants of the game 
 #define GAME_STATE_WAITING 0
 #define GAME_STATE_PLAYING 1
+#define GAME_STATE_INIT 2
 #define GROUNDLEVEL 128
 #define JUMPFORCE -10 
 #define GRAVITY 1
@@ -24,7 +25,7 @@
 
 // Bird's coordinates 
 #define BIRDX_INIT 0
-#define BIRDY_INIT SCREEN_HEIGHT / 2
+#define BIRDY_INIT 96 //SCREEN_HEIGHT / 2
 
 
 // Pipes Dimensions & Variables 
@@ -33,7 +34,7 @@
 #define PIPE_GAP 60
 #define NUM_PIPES 2
 #define PIPE_INIT_X 140
-#define PIPE_INIT_Y GROUNDLEVEL- 32
+#define PIPE_INIT_Y GROUNDLEVEL
 
 
 
@@ -68,6 +69,7 @@ extern int gameState; // État initial du jeu
 void configureBird();
 void setBirdPosition(int index,int x, int y);
 void setPipePosition(int index, int x, int y);
+void drawpipe();
 
 
 // Pipes initialization 
@@ -89,6 +91,7 @@ void configureSprites();
 void initPipes();
 void updatePipes();
 void checkCollisions();
+void resetPipe();
 
 
 void SubMenu(); //initialisation SubMenu pour le menu du jeu 
