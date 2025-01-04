@@ -1,13 +1,13 @@
 
 #include "graphics.h"
 #include <nds/arm9/background.h>
+#include <stdio.h>
 #include"bird.h"
 #include "pipe1.h"
 #include "pipe2.h"
 #include "start_button.h"
-#include "Menu.h"
 #include "background2.h" // GRIT file for background tiles
-#include <stdio.h>
+
 
 // Global variables 
 
@@ -17,6 +17,8 @@ u16 *Pipegfx;
 u16 *Pipegfx2;
 
 Pipe pipes[NUM_PIPES];
+
+extern int speedMultiplier; 
 
 
 // Main engine configuration 
@@ -28,6 +30,8 @@ void initBackground() {
     VRAM_A_CR = VRAM_ENABLE | VRAM_A_MAIN_BG;
 
     BGCTRL[0] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(0) | BG_TILE_BASE(2);
+
+
 
     dmaCopy(background2Tiles, BG_TILE_RAM(2), background2TilesLen);
     dmaCopy(background2Map, BG_MAP_RAM(0), background2MapLen);
@@ -47,9 +51,10 @@ void resetPipe() {
 
 
 void updateBackground() {
-    scrollX = (scrollX + 1) % 256; // Wrap around when reaching the end
+    speedTimerISR();
+    scrollX = (scrollX + 1) % 256; // Accelerated scrolling
     REG_BG0HOFS = scrollX; 
-    }        // Update horizontal offset
+}
 
 void setBirdPosition(int index, int x, int y) {
     oamSet(&oamMain, index, x, y, 0, 0, SpriteSize_32x32, SpriteColorFormat_256Color, gfx, -1, false, false, false, false, false);
@@ -61,19 +66,6 @@ void setPipePosition(int index, int x, int y) {
 }
 
 
-
-
-
-// Fonction pour initialiser le jeu
-void initGame() {
-    //gameState = GAME_STATE_WAITING; // État initial du jeu
-    score = 0;                     // Score réinitialisé
-    
-    initBackground();                // Initialise les graphismes
-    //initBird();                    // Initialise l'oiseau
-
-}
-
 // Fonction pour réinitialiser le jeu en cas de Game Over
 void resetGame() {
     score = 0;                     // Score réinitialisé
@@ -83,7 +75,6 @@ void resetGame() {
 
     //resetPipe();
     consoleClear();                // Efface l'écran de la console
-    iprintf("Ne marce pas\n");
     
 }
 
@@ -168,7 +159,7 @@ void updatePipes() {
     //setPipePosition(SPRITE_PIPE, pipes[SPRITE_PIPE].x , pipes[SPRITE_PIPE].y);
     for (int i = 0; i < NUM_PIPES; i++) {
         // Les pipes bougent à la même vitesse que le background
-        pipes[i].x-= 1;//(1 + scrollX % 256); // Ajustez la vitesse relative si nécessaire
+        pipes[i].x-= 1 ;//(1 + scrollX % 256); // Ajustez la vitesse relative si nécessaire
         setPipePosition(SPRITE_PIPE, pipes[i].x , pipes[i].y);
         
         // Réinitialiser le pipe lorsqu'il sort de l'écran
@@ -182,12 +173,44 @@ void updatePipes() {
     }
 }
 
+
+ void updateScore() {
+    
+    for (int i = 0; i < NUM_PIPES; i++){
+
+        if (birdX > pipes[i].x + PIPE_WIDTH) { // Passed the pipe
+            //pipes[i].x = -1; // Mark pipe as counted
+            score++;
+            iprintf("Score: %d\n", score);
+        }
+        
+    }
+ }
+
+void displayGameOverScreen() {
+
+    timer_ISR();
+  
+    // Clear the line
+    iprintf("\x1b[10;0H                              "); // Fills the line with spaces
+
+    // Print "Game Over" if the message is toggled on
+    if (showMessage) {
+        iprintf("\x1b[10;5HGame Over! : Press Start to Play again");
+    }
+
+    // Print the score
+    iprintf("\x1b[12;5HScore: %d", score);
+
+    gameState = GAME_STATE_GAME_OVER;
+}
+
 void checkCollisions() {
     // Check ground and ceiling collision
     if (birdY >= GROUNDLEVEL || birdY <= 0) {
         // Collision with ground or ceiling
-        resetGame();
-        iprintf("Game Over: Bird hit the ground or ceiling.\n");
+        displayGameOverScreen();
+        //resetGame()
         return;
     }
     
@@ -197,15 +220,15 @@ void checkCollisions() {
             if (birdX + BIRD_WIDTH > pipes[i].x && birdX < pipes[i].x + PIPE_WIDTH) {
                 if (i % 2 == 0) {
                     if (birdY < (pipes[i].y+64)) {
-                        resetGame();
-                        iprintf("Game Over: Bird collided with a pipe.\n");
+                        displayGameOverScreen();
+                        //resetGame();
                         return;
                     }
                 } 
                 else {
                     if (birdY + BIRD_HEIGHT > pipes[i].y) {
-                    resetGame();
-                    iprintf("Game Over: Bird collided with a pipe.\n");
+                    displayGameOverScreen();
+                    //resetGame();
                     return;
                     }
                 
@@ -214,7 +237,9 @@ void checkCollisions() {
         }
         
         
-    }
+ }
+
+
 // Vertical collision check
                 /*
                 if (birdY < pipes[i].y || birdY + BIRD_HEIGHT > pipes[i].y + PIPE_GAP) {
@@ -226,40 +251,5 @@ void checkCollisions() {
                 */
 
 
-// Sub engine configuration 
-
-void SubMenu(){
-
-    // Sub background intialisation 
-    REG_DISPCNT_SUB = MODE_0_2D | DISPLAY_BG0_ACTIVE;
-    VRAM_C_CR = VRAM_ENABLE | VRAM_C_SUB_BG;
-
-    // SuB Background configuration 
-    BGCTRL_SUB[0] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(0) | BG_TILE_BASE(2);
-    
-    // Load the tiles and map into VRAM
-    dmaCopy(MenuTiles, BG_TILE_RAM_SUB(0), MenuTilesLen); // Replace `menuTiles` with your tile data
-    dmaCopy(MenuMap, BG_MAP_RAM_SUB(1), MenuMapLen);     // Replace `menuMap` with your map data
-    dmaCopy(MenuPal, BG_PALETTE_SUB, MenuPalLen); // Replace `menuPalette` with your palette
-}
-
-void initSubMenuSprites() {
-    // Configure VRAM pour les sprites sur le sous-écran
-    REG_DISPCNT_SUB = MODE_0_2D | DISPLAY_BG0_ACTIVE;
-    VRAM_D_CR = VRAM_ENABLE | VRAM_D_SUB_SPRITE;
-
-    oamInit(&oamSub, SpriteMapping_1D_32, false);
-
-    // Alloue de la mémoire pour les sprites
-    u16* startButtonSubGfx = oamAllocateGfx(&oamSub, SpriteSize_64x32, SpriteColorFormat_256Color);
-
-    // Charge les graphismes des boutons
-    dmaCopy(start_buttonTiles, startButtonSubGfx, start_buttonTilesLen);
-
-    // Charge la palette des sprites
-    dmaCopy(start_buttonPal, SPRITE_PALETTE_SUB, start_buttonPalLen);
-}
-
 //****************************************NEW CODE
-
 

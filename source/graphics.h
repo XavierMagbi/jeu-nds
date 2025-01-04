@@ -1,4 +1,5 @@
 #include <nds.h>
+#include "timer.h"
 
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
@@ -7,6 +8,7 @@
 #define GAME_STATE_WAITING 0
 #define GAME_STATE_PLAYING 1
 #define GAME_STATE_INIT 2
+#define GAME_STATE_GAME_OVER 3
 #define GROUNDLEVEL 128
 #define JUMPFORCE -10 
 #define GRAVITY 1
@@ -81,7 +83,6 @@ void updateBackground(); // Scrolling the background
 // Fonctions qui étaient dans le main 
 
 //void initBird();
-void initGame();
 void setPipePosition(int index, int x, int y);
 void resetGame();
 void handleInput();
@@ -92,10 +93,10 @@ void initPipes();
 void updatePipes();
 void checkCollisions();
 void resetPipe();
+void updateScore();
+void displayGameOverScreen();
 
 
-void SubMenu(); //initialisation SubMenu pour le menu du jeu 
-void initSubMenuSprites(); //Initialisation Sprite pour les boutons du menu du bas 
 
 
 
