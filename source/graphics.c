@@ -18,6 +18,7 @@ u16 *Pipegfx2;
 
 Pipe pipes[NUM_PIPES];
 
+
 extern int speedMultiplier; 
 
 
@@ -133,45 +134,65 @@ void configureSprites(){
     dmaCopy(pipe1Tiles , Pipegfx2, pipe1TilesLen);              // Load bird tiles
 
 }
-
+/*
 void initPipes() {
 
     for (int i = 0; i < NUM_PIPES; i++){
 
-        pipes[i].x = PIPE_INIT_X;  // Offset pipes
+        int pair_number = i / 2;
+        pipes[i].x = PIPE_INIT_X + (pair_number * 90);
         pipes[i].y = PIPE_INIT_Y*i;
 
     }
 }
+*/
 
-void updatePipes() {
-    /*
-    for (int i = 0; i < NUM_PIPES; i++){
-
-        pipes[i].x = PIPE_INIT_X;  // Offset pipes
-        pipes[i].y =  PIPE_INIT_Y*i;
-
-    }
-    */
-
-    
-    //pipes[SPRITE_PIPE].x-= (1 + scrollX % 256); // Ajustez la vitesse relative si nécessaire
-    //setPipePosition(SPRITE_PIPE, pipes[SPRITE_PIPE].x , pipes[SPRITE_PIPE].y);
+void initPipes() {
     for (int i = 0; i < NUM_PIPES; i++) {
-        // Les pipes bougent à la même vitesse que le background
-        pipes[i].x-= 1 ;//(1 + scrollX % 256); // Ajustez la vitesse relative si nécessaire
-        setPipePosition(SPRITE_PIPE, pipes[i].x , pipes[i].y);
-        
-        // Réinitialiser le pipe lorsqu'il sort de l'écran
-        if (pipes[i].x + PIPE_WIDTH < 0) {
-            pipes[i].x = SCREEN_WIDTH;
-            //pipes[i].y = rand() % (SCREEN_HEIGHT - PIPE_GAP - PIPE_HEIGHT) + PIPE_HEIGHT;
-            //pipes[i].y = rand() % (SCREEN_HEIGHT - PIPE_GAP); // Nouvelle hauteur aléatoire
-            //pipes[i].active = true;
+        int pair_number = i / 2;
+        pipes[i].x = PIPE_INIT_X + (pair_number * 90);
+        if (i % 2 == 0) {
+            // Upper pipe
+            pipes[i].y = 0; // Fixed at the top of the screen
+        } else {
+            // Lower pipe
+            pipes[i].y = 150; // Fixed at the predefined bottom Y-coordinate
         }
-        
     }
 }
+
+
+
+void updatePipes() {
+    int spriteIndex = 1;
+    for (int i = 0; i < NUM_PIPES; i++) {
+        pipes[i].x -= 1;
+
+        if (i % 2 == 0) {
+            // Set position for upper and lower pipes
+            setPipePosition(spriteIndex, pipes[spriteIndex].x, pipes[spriteIndex].y);
+            spriteIndex += 2;
+        }
+
+        // Reset pipe if it moves off-screen
+        if (pipes[i].x + PIPE_WIDTH < 0) {
+            pipes[i].x = SCREEN_WIDTH;
+
+            
+            if (i % 2 == 0) {
+                // Upper pipe: Randomized within valid range
+                pipes[i].y = rand() % (SCREEN_HEIGHT - PIPE_HEIGHT - PIPE_GAP);
+            } else {
+               // Lower pipe: Positioned relative to the upper pipe
+                pipes[i].y = pipes[i - 1].y + PIPE_HEIGHT + PIPE_GAP;
+            }
+            
+        }
+    }
+}
+
+
+
 
 
  void updateScore() {

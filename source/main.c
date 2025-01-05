@@ -22,25 +22,44 @@ bool isJumping = false;       // Tracks whether the bird is mid-jump
 
 int gameState = GAME_STATE_INIT;
 
-/*
+
 
 void printPipes() {
     iprintf("----- Pipes List -----\n");
+    
     for(int i = 0; i < NUM_PIPES; i++) {
         iprintf("Pipe %d: x = %d, y = %d\n", 
-                i+1, 
-                pipes[i].x, 
-                pipes[i].y);
+            i+1, 
+            pipes[i].x, 
+            pipes[i].y);
                 
     }
+    
     //iprintf("BIRD: x = %d, y = %d\n", birdX, (int)birdY);
+    
+/*
+    int index = 0; // Initialize an index variable
+
+for (int i = 0; i < NUM_PIPES; i++) {
+    int sprite_index = 1 + (i * 2); // Calculate the sprite index
+    
+    // Print pipe details
+    iprintf("Pipe %d: sprite_index = %d, x = %d, y = %d\n", 
+            index + 1,         // Use the local index
+            sprite_index,      // Sprite index
+            pipes[i].x,        // Pipe x-coordinate
+            pipes[i].y);       // Pipe y-coordinate
+    
+    index++; // Increment index
+}
+*/
 
 
 
     iprintf("----------------------\n");
 }
 
-*/
+
 
 
 int main(){
@@ -94,8 +113,8 @@ int main(){
             setBirdPosition(SPRITE_BIRD,birdX,birdY);
 
             updatePipes();
-            updateScore();
-            //printPipes(); 
+            //updateScore();
+            printPipes(); 
         }
 
         if(gameState == GAME_STATE_GAME_OVER){

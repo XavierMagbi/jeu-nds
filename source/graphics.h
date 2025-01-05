@@ -34,7 +34,7 @@
 #define PIPE_WIDTH 52
 #define PIPE_HEIGHT 64
 #define PIPE_GAP 60
-#define NUM_PIPES 2
+#define NUM_PIPES 4
 #define PIPE_INIT_X 140
 #define PIPE_INIT_Y GROUNDLEVEL
 
@@ -49,7 +49,7 @@ typedef struct {
 
 
 extern Pipe pipes[NUM_PIPES];
-
+extern int sprite_num[NUM_PIPES];
 extern int score ;    // Score initial
 extern int blinkCounter ;    // Compteur pour gérer le clignotement
 extern bool showMessage ; // Indique si le message est affiché
