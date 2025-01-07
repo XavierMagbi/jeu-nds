@@ -71,6 +71,8 @@ extern int gameState; // État initial du jeu
 void configureBird();
 void setBirdPosition(int index,int x, int y);
 void setPipePosition(int index, int x, int y);
+void setPipePositiondouble(int index, int x, int y, int z);
+void setPipePositionDOWN(int index, int x, int y);
 void drawpipe();
 
 

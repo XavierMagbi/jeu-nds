@@ -65,6 +65,11 @@ void setPipePosition(int index, int x, int y) {
     oamSet(&oamMain, index, x, y, 0, 0, SpriteSize_64x64, SpriteColorFormat_256Color, Pipegfx, -1, false, false, false, false, false);
     oamSet(&oamMain, index+1, x, 0, 0, 0, SpriteSize_64x64, SpriteColorFormat_256Color, Pipegfx, -1, false, false, false, true, false);
 }
+void setPipePositiondouble(int index, int x, int y, int z ) {
+    oamSet(&oamMain, index, x, y, 0, 0, SpriteSize_64x64, SpriteColorFormat_256Color, Pipegfx, -1, false, false, false, false, false);  //DOWN
+    oamSet(&oamMain, index+1, x, z, 0, 0, SpriteSize_64x64, SpriteColorFormat_256Color, Pipegfx, -1, false, false, false, true, false); //UP
+}
+
 
 
 // Fonction pour réinitialiser le jeu en cas de Game Over
@@ -123,34 +128,23 @@ void configureSprites(){
     oamInit(&oamMain, SpriteMapping_1D_32, false);
     gfx = oamAllocateGfx(&oamMain, SpriteSize_32x32, SpriteColorFormat_256Color);
     Pipegfx = oamAllocateGfx(&oamMain, SpriteSize_64x64, SpriteColorFormat_256Color);
-    Pipegfx2 = oamAllocateGfx(&oamMain, SpriteSize_64x64, SpriteColorFormat_256Color);
+    //Pipegfx2 = oamAllocateGfx(&oamMain, SpriteSize_64x64, SpriteColorFormat_256Color);
 
     // Load bird sprite palette and tiles
     dmaCopy(birdPal, SPRITE_PALETTE , birdPalLen); // Load bird palette at index 0
     dmaCopy(pipe1Pal, &SPRITE_PALETTE[birdPalLen/2], pipe1PalLen);
-    dmaCopy(pipe1Pal, &SPRITE_PALETTE[pipe1PalLen/2], pipe1PalLen);
+    //dmaCopy(pipe1Pal, &SPRITE_PALETTE[pipe1PalLen/2], pipe1PalLen);
     dmaCopy(birdTiles, gfx, birdTilesLen); // Load bird tiles
     dmaCopy(pipe1Tiles , Pipegfx, pipe1TilesLen);   // Load pipe tiles
-    dmaCopy(pipe1Tiles , Pipegfx2, pipe1TilesLen);              // Load bird tiles
+    //dmaCopy(pipe1Tiles , Pipegfx2, pipe1TilesLen);              // Load bird tiles
 
 }
-/*
-void initPipes() {
 
-    for (int i = 0; i < NUM_PIPES; i++){
-
-        int pair_number = i / 2;
-        pipes[i].x = PIPE_INIT_X + (pair_number * 90);
-        pipes[i].y = PIPE_INIT_Y*i;
-
-    }
-}
-*/
 
 void initPipes() {
     for (int i = 0; i < NUM_PIPES; i++) {
         int pair_number = i / 2;
-        pipes[i].x = PIPE_INIT_X + (pair_number * 90);
+        pipes[i].x = PIPE_INIT_X + (pair_number * 140);
         if (i % 2 == 0) {
             // Upper pipe
             pipes[i].y = 0; // Fixed at the top of the screen
@@ -170,22 +164,28 @@ void updatePipes() {
 
         if (i % 2 == 0) {
             // Set position for upper and lower pipes
-            setPipePosition(spriteIndex, pipes[spriteIndex].x, pipes[spriteIndex].y);
+            setPipePositiondouble(spriteIndex, pipes[spriteIndex-1].x, pipes[spriteIndex].y, pipes[spriteIndex-1].y);
             spriteIndex += 2;
         }
-
+        
         // Reset pipe if it moves off-screen
         if (pipes[i].x + PIPE_WIDTH < 0) {
             pipes[i].x = SCREEN_WIDTH;
 
             
-            if (i % 2 == 0) {
-                // Upper pipe: Randomized within valid range
-                pipes[i].y = rand() % (SCREEN_HEIGHT - PIPE_HEIGHT - PIPE_GAP);
-            } else {
-               // Lower pipe: Positioned relative to the upper pipe
-                pipes[i].y = pipes[i - 1].y + PIPE_HEIGHT + PIPE_GAP;
-            }
+           if (i % 2 == 0) {
+                
+                int maxUpperY = 150 - PIPE_HEIGHT - PIPE_GAP;
+                pipes[i].y = rand() % (maxUpperY > 0 ? maxUpperY : 1); 
+                } else {
+                    
+                    pipes[i].y = pipes[i - 1].y + PIPE_HEIGHT + PIPE_GAP;
+
+                    if (pipes[i].y > 150) {
+                        pipes[i].y = 150;
+                    }
+                }
+
             
         }
     }
@@ -240,7 +240,7 @@ void checkCollisions() {
             // Horizontal collision check
             if (birdX + BIRD_WIDTH > pipes[i].x && birdX < pipes[i].x + PIPE_WIDTH) {
                 if (i % 2 == 0) {
-                    if (birdY < (pipes[i].y+64)) {
+                    if (birdY < (pipes[i].y+60)) {
                         displayGameOverScreen();
                         //resetGame();
                         return;

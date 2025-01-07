@@ -29,7 +29,7 @@ void printPipes() {
     
     for(int i = 0; i < NUM_PIPES; i++) {
         iprintf("Pipe %d: x = %d, y = %d\n", 
-            i+1, 
+            i, 
             pipes[i].x, 
             pipes[i].y);
                 
@@ -113,8 +113,8 @@ int main(){
             setBirdPosition(SPRITE_BIRD,birdX,birdY);
 
             updatePipes();
-            //updateScore();
-            printPipes(); 
+            updateScore();
+            //printPipes(); 
         }
 
         if(gameState == GAME_STATE_GAME_OVER){
