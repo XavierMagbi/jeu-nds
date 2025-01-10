@@ -63,8 +63,6 @@ for (int i = 0; i < NUM_PIPES; i++) {
 */
 
 
-
-    iprintf("----------------------\n");
 }
 
 
@@ -107,8 +105,6 @@ int main(){
        
         if (gameState == GAME_STATE_WAITING) {
              initSubScreen();
-            //setBirdPosition(SPRITE_BIRD,BIRDX_INIT,BIRDY_INIT);
-            //setPipePosition(SPRITE_PIPE ,PIPE_INIT_X,PIPE_INIT_Y);
             if (keys & KEY_START) {
                 gameState = GAME_STATE_PLAYING;
             }
@@ -116,10 +112,8 @@ int main(){
 
         if (gameState == GAME_STATE_WAITING) {
             setBirdPosition(SPRITE_BIRD,BIRDX_INIT,BIRDY_INIT);
-            initPipes();
-            setPipePosition(SPRITE_PIPE ,PIPE_INIT_X,PIPE_INIT_Y);
-            //resetPipe();
-            //printPipes();
+            initGamePipes();
+            //setTubePosition(SPRITE_TUBE,TUBE_X,TUBE_Y);
             
         }
 
@@ -141,12 +135,10 @@ int main(){
                 mmEffect(SFX_JUMP); 
             }
             
-    
-
-            checkCollisions(); // Check for collisions
+            checkCollisions();
             setBirdPosition(SPRITE_BIRD,birdX,birdY);
-
             updatePipes();
+            //updatesTest();
             //updateScore(score);
         }
             

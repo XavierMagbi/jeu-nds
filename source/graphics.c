@@ -1,4 +1,5 @@
 
+#include <nds.h>
 #include "graphics.h"
 #include <nds/arm9/background.h>
 #include <stdio.h>
@@ -13,14 +14,19 @@
 // Global variables 
 
 int scrollX = 0;
-u16 *gfx;
+u16 *birdgfx;
 u16 *Pipegfx;
+u16 *Tubegfx;
+u16 *Pipegfx1;
 u16 *Pipegfx2;
+u16 *Pipegfx3;
+
 
 Pipe pipes[NUM_PIPES];
 
 
 extern int speedMultiplier; 
+bool printpipe;
 
 
 // Main engine configuration 
@@ -59,19 +65,30 @@ void updateBackground() {
     speedTimerISR();
     scrollX = (scrollX + 1) % 256; // Accelerated scrolling
     REG_BG0HOFS = scrollX; 
+
+    if scrollX == 0 {
+        printpipe = true;
+    }
+
+    
 }
 
 void setBirdPosition(int index, int x, int y) {
-    oamSet(&oamMain, index, x, y, 0, 0, SpriteSize_32x32, SpriteColorFormat_256Color, gfx, -1, false, false, false, false, false);
+    oamSet(&oamMain, index, x, y, 0, 0, SpriteSize_32x32, SpriteColorFormat_256Color, birdgfx, -1, false, false, false, false, false);
 }
 
 void setPipePosition(int index, int x, int y) {
     oamSet(&oamMain, index, x, y, 0, 0, SpriteSize_64x64, SpriteColorFormat_256Color, Pipegfx, -1, false, false, false, false, false);
     oamSet(&oamMain, index+1, x, 0, 0, 0, SpriteSize_64x64, SpriteColorFormat_256Color, Pipegfx, -1, false, false, false, true, false);
 }
+
 void setPipePositiondouble(int index, int x, int y, int z ) {
     oamSet(&oamMain, index, x, y, 0, 0, SpriteSize_64x64, SpriteColorFormat_256Color, Pipegfx, -1, false, false, false, false, false);  //DOWN
     oamSet(&oamMain, index+1, x, z, 0, 0, SpriteSize_64x64, SpriteColorFormat_256Color, Pipegfx, -1, false, false, false, true, false); //UP
+}
+
+void setTubePosition(int index , int x , int y){
+     oamSet(&oamMain, index, x, y, 0, 0, SpriteSize_64x64, SpriteColorFormat_256Color, Pipegfx2, -1, false, false, false, true, false);//UP 
 }
 
 
@@ -111,69 +128,95 @@ void configureSprites(){
     VRAM_B_CR = VRAM_ENABLE | VRAM_B_MAIN_SPRITE_0x06400000;
 
     oamInit(&oamMain, SpriteMapping_1D_32, false);
-    gfx = oamAllocateGfx(&oamMain, SpriteSize_32x32, SpriteColorFormat_256Color);
+    birdgfx = oamAllocateGfx(&oamMain, SpriteSize_32x32, SpriteColorFormat_256Color);
     Pipegfx = oamAllocateGfx(&oamMain, SpriteSize_64x64, SpriteColorFormat_256Color);
-    //Pipegfx2 = oamAllocateGfx(&oamMain, SpriteSize_64x64, SpriteColorFormat_256Color);
+    Tubegfx = oamAllocateGfx(&oamMain, SpriteSize_64x64, SpriteColorFormat_256Color);
 
     // Load bird sprite palette and tiles
     dmaCopy(birdPal, SPRITE_PALETTE , birdPalLen); // Load bird palette at index 0
     dmaCopy(pipe1Pal, &SPRITE_PALETTE[birdPalLen/2], pipe1PalLen);
-    //dmaCopy(pipe1Pal, &SPRITE_PALETTE[pipe1PalLen/2], pipe1PalLen);
-    dmaCopy(birdTiles, gfx, birdTilesLen); // Load bird tiles
+    dmaCopy(pipe2Pal, &SPRITE_PALETTE[pipe1PalLen/2], pipe2PalLen);
+    dmaCopy(birdTiles, birdgfx, birdTilesLen); // Load bird tiles
     dmaCopy(pipe1Tiles , Pipegfx, pipe1TilesLen);   // Load pipe tiles
-    //dmaCopy(pipe1Tiles , Pipegfx2, pipe1TilesLen);              // Load bird tiles
+    dmaCopy(pipe2Tiles , Tubegfx, pipe2TilesLen);        // Load tube tiles
 
 }
-
 
 void initPipes() {
-    for (int i = 0; i < NUM_PIPES; i++) {
-        int pair_number = i / 2;
-        pipes[i].x = PIPE_INIT_X + (pair_number * 140);
-        if (i % 2 == 0) {
-            // Upper pipe
-            pipes[i].y = 0; // Fixed at the top of the screen
+
+    if (printpipe){
+
+        for (int i = 0; i < NUM_PIPES; i += 2) {
+        pipes[i].x = SCREEN_WIDTH + (i / 2) * 40;      // Apply 40px horizontal spacing
+        pipes[i + 1].x = pipes[i].x;                   // Sync lower pipe with upper pipe
+
+        int pattern = (i / 2) % 3;  // Cycle through 3 patterns
+
+        if (pattern == 0) {
+            // Pattern 1: Upper at 0, lower at 150
+            pipes[i].y = 0;
+            pipes[i + 1].y = 150;
+        } else if (pattern == 1) {
+            // Pattern 2: Upper at 20, lower at 180
+            pipes[i].y = 20;
+            pipes[i + 1].y = 180;
         } else {
-            // Lower pipe
-            pipes[i].y = 150; // Fixed at the predefined bottom Y-coordinate
+            // Pattern 3: Upper at 10, lower at 170
+            pipes[i].y = 10;
+            pipes[i + 1].y = 170;
         }
     }
+
+
+    }
+    
 }
+
+void initGamePipes() {
+    initPipes();  // Initialize pipe positions
+
+    // Initialize all 3 pipe pairs (6 pipes total)
+    for (int i = 0; i < NUM_PIPES; i += 2) {
+        setPipePositiondouble(i, pipes[i].x, pipes[i].y, pipes[i + 1].y);
+    }
+}
+
+
 
 
 void updatePipes() {
-    int spriteIndex = 1;
-    for (int i = 0; i < NUM_PIPES; i++) {
-        pipes[i].x -= 1;
+    for (int i = 0; i < NUM_PIPES; i += 2) {
+        pipes[i].x -= 1 * speedMultiplier;    // Move upper pipe
+        pipes[i + 1].x = pipes[i].x;         // Sync lower pipe
 
-        if (i % 2 == 0) {
-            // Set position for upper and lower pipes
-            setPipePositiondouble(spriteIndex, pipes[spriteIndex-1].x, pipes[spriteIndex].y, pipes[spriteIndex-1].y);
-            spriteIndex += 2;
-        }
-        
-        // Reset pipe if it moves off-screen
+        // Reset pipes when off-screen
         if (pipes[i].x + PIPE_WIDTH < 0) {
-            pipes[i].x = SCREEN_WIDTH;
+            pipes[i].x = SCREEN_WIDTH + 40;  // Reset with 40px spacing
+            pipes[i + 1].x = pipes[i].x;
 
-            
-           if (i % 2 == 0) {
-                
-                int maxUpperY = 150 - PIPE_HEIGHT - PIPE_GAP;
-                pipes[i].y = rand() % (maxUpperY > 0 ? maxUpperY : 1); 
-                } else {
-                    
-                    pipes[i].y = pipes[i - 1].y + PIPE_HEIGHT + PIPE_GAP;
+            int pattern = ((i / 2) + 1) % 3;  // Cycle to next pattern
 
-                    if (pipes[i].y > 150) {
-                        pipes[i].y = 150;
-                    }
-                }
-
-            
+            if (pattern == 0) {
+                // Pattern 1: Upper at 0, lower at 150
+                pipes[i].y = 0;
+                pipes[i + 1].y = 150;
+            } else if (pattern == 1) {
+                // Pattern 2: Upper at 20, lower at 180
+                pipes[i].y = 20;
+                pipes[i + 1].y = 180;
+            } else {
+                // Pattern 3: Upper at 10, lower at 170
+                pipes[i].y = 10;
+                pipes[i + 1].y = 170;
+            }
         }
+
+        // Update the sprite positions
+        setPipePosition(i, pipes[i].x, pipes[i].y);           // Upper pipe
+        setPipePosition(i + 1, pipes[i + 1].x, pipes[i + 1].y); // Lower pipe
     }
 }
+
 
 void updateScore(int score) {
     

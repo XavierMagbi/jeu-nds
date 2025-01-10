@@ -4,12 +4,14 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
-// Constants of the game 
+// States of the game
 #define GAME_STATE_WAITING 0
 #define GAME_STATE_PLAYING 1
 #define GAME_STATE_INIT 2
 #define GAME_STATE_GAME_OVER 3
 #define GAME_STATE_MENU 4 
+
+// Constants of  the game 
 #define GROUNDLEVEL 128
 #define JUMPFORCE -10 
 #define GRAVITY 1
@@ -17,6 +19,7 @@
 // Sprite indices
 #define SPRITE_BIRD 0
 #define SPRITE_PIPE 1
+#define SPRITE_TUBE 3
 
 //Screen dimensions
 #define SCREEN_WIDTH	256
@@ -28,14 +31,22 @@
 
 // Bird's coordinates 
 #define BIRDX_INIT 0
-#define BIRDY_INIT 96 //SCREEN_HEIGHT / 2
+#define BIRDY_INIT 96 
 
-
-// Pipes Dimensions & Variables 
+// Pipes Dimensions & Variables
 #define PIPE_WIDTH 52
 #define PIPE_HEIGHT 64
 #define PIPE_GAP 60
-#define NUM_PIPES 4
+#define NUM_PIPES 6
+
+// Tube's coordinates
+#define PIPE_WIDTH 52
+#define PIPE_HEIGHT 64
+#define TUBE_Y 0
+#define TUBE_X 140 
+
+
+// Coordinates of pipe
 #define PIPE_INIT_X 140
 #define PIPE_INIT_Y GROUNDLEVEL
 
@@ -73,6 +84,7 @@ void configureBird();
 void setBirdPosition(int index,int x, int y);
 void setPipePosition(int index, int x, int y);
 void setPipePositiondouble(int index, int x, int y, int z);
+void setTubePosition(int index , int x , int y);
 void setPipePositionDOWN(int index, int x, int y);
 void drawpipe();
 
@@ -90,6 +102,7 @@ void resetGame();
 void displayStartScreen();
 void configureSprites();
 void initPipes();
+void initGamePipes();
 void updatePipes();
 void checkCollisions();
 void resetPipe();
