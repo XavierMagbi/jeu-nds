@@ -5,8 +5,9 @@
 #include"bird.h"
 #include "pipe1.h"
 #include "pipe2.h"
-#include "start_button.h"
 #include "background2.h" // GRIT file for background tiles
+#include "Subbg.h"
+#include "GameOver.h"
 
 
 // Global variables 
@@ -24,12 +25,16 @@ extern int speedMultiplier;
 
 // Main engine configuration 
 
-void initBackground() {
+void initMainScreenBackground() {
 
+
+    // Configure sub-screen with BG0 for text
     REG_DISPCNT = MODE_0_2D | DISPLAY_BG0_ACTIVE;
 
+    // Use VRAM C for sub-screen
     VRAM_A_CR = VRAM_ENABLE | VRAM_A_MAIN_BG;
 
+    // Configure BG0 on the sub-screen
     BGCTRL[0] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(0) | BG_TILE_BASE(2);
 
 
@@ -49,7 +54,6 @@ void resetPipe() {
     }
     
 }
-
 
 void updateBackground() {
     speedTimerISR();
@@ -73,8 +77,7 @@ void setPipePositiondouble(int index, int x, int y, int z ) {
 
 
 // Fonction pour réinitialiser le jeu en cas de Game Over
-void resetGame() {
-    score = 0;                     // Score réinitialisé
+void resetGame() {                    // Score réinitialisé
     gameState = GAME_STATE_WAITING; // Retour à l'état d'attente
     birdX = BIRDX_INIT;
     birdY = BIRDY_INIT;
@@ -84,22 +87,6 @@ void resetGame() {
     
 }
 
-void handleInput() {
-    
-return ; 	
-}
-
-void updateGameLogic() {
-    birdVelocity += GRAVITY;
-    birdY += birdVelocity;
-    //setBirdPosition(32, birdY);
-
-    // Check collisions (ground, pipes, etc.)
-    if (birdY > 192 || birdY < 0) {
-        //playCollisionSound();
-        while (1); // Game Over
-    }
-}
 
 void displayStartScreen() {
     blinkCounter++;
@@ -122,8 +109,6 @@ void displayStartScreen() {
 void configureSprites(){
      // Map VRAM_B for the bird sprite
     VRAM_B_CR = VRAM_ENABLE | VRAM_B_MAIN_SPRITE_0x06400000;
-
-
 
     oamInit(&oamMain, SpriteMapping_1D_32, false);
     gfx = oamAllocateGfx(&oamMain, SpriteSize_32x32, SpriteColorFormat_256Color);
@@ -154,7 +139,6 @@ void initPipes() {
         }
     }
 }
-
 
 
 void updatePipes() {
@@ -191,13 +175,10 @@ void updatePipes() {
     }
 }
 
-
-
-
-
- void updateScore() {
+void updateScore(int score) {
     
     for (int i = 0; i < NUM_PIPES; i++){
+        iprintf("\x1b[10;cela marche");
 
         if (birdX > pipes[i].x + PIPE_WIDTH) { // Passed the pipe
             //pipes[i].x = -1; // Mark pipe as counted
@@ -208,22 +189,38 @@ void updatePipes() {
     }
  }
 
+void initSubScreen(){
+
+    REG_DISPCNT_SUB = MODE_0_2D | DISPLAY_BG0_ACTIVE;
+
+    VRAM_C_CR = VRAM_ENABLE | VRAM_C_SUB_BG;
+
+    BGCTRL_SUB[0] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(0) | BG_TILE_BASE(2);
+
+
+    dmaCopy(SubbgTiles, BG_TILE_RAM_SUB(2), SubbgTilesLen);
+    dmaCopy(SubbgMap, BG_MAP_RAM_SUB(0), SubbgMapLen);
+    dmaCopy(SubbgPal, BG_PALETTE_SUB, SubbgPalLen);
+
+}
+
+
 void displayGameOverScreen() {
 
-    timer_ISR();
-  
-    // Clear the line
-    iprintf("\x1b[10;0H                              "); // Fills the line with spaces
-
-    // Print "Game Over" if the message is toggled on
-    if (showMessage) {
-        iprintf("\x1b[10;5HGame Over! : Press Start to Play again");
-    }
-
-    // Print the score
-    iprintf("\x1b[12;5HScore: %d", score);
-
     gameState = GAME_STATE_GAME_OVER;
+
+
+    REG_DISPCNT_SUB = MODE_0_2D | DISPLAY_BG0_ACTIVE;
+
+    VRAM_C_CR = VRAM_ENABLE | VRAM_C_SUB_BG;
+
+    BGCTRL_SUB[0] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(1) | BG_TILE_BASE(3);
+
+    dmaCopy(GameOverTiles, BG_TILE_RAM_SUB(3), GameOverTilesLen);
+    dmaCopy(GameOverMap, BG_MAP_RAM_SUB(1), GameOverMapLen);
+    dmaCopy(GameOverPal, BG_PALETTE_SUB, GameOverPalLen);
+
+    
 }
 
 void checkCollisions() {
@@ -231,25 +228,22 @@ void checkCollisions() {
     if (birdY >= GROUNDLEVEL || birdY <= 0) {
         // Collision with ground or ceiling
         displayGameOverScreen();
-        //resetGame()
         return;
     }
     
     // Check pipe collisions
     for (int i = 0; i < NUM_PIPES; i++) {
             // Horizontal collision check
-            if (birdX + BIRD_WIDTH > pipes[i].x && birdX < pipes[i].x + PIPE_WIDTH) {
+            if (birdX + BIRD_WIDTH  > pipes[i].x && birdX < pipes[i].x + PIPE_WIDTH) {
                 if (i % 2 == 0) {
                     if (birdY < (pipes[i].y+60)) {
                         displayGameOverScreen();
-                        //resetGame();
                         return;
                     }
                 } 
                 else {
-                    if (birdY + BIRD_HEIGHT > pipes[i].y) {
+                    if (birdY + BIRD_HEIGHT-10 > pipes[i].y) {
                     displayGameOverScreen();
-                    //resetGame();
                     return;
                     }
                 
@@ -260,16 +254,12 @@ void checkCollisions() {
         
  }
 
+ void displayScoreAndDistance(int score, int distance) {
+    // Print the score and distance at the top-left corner
+    iprintf("\x1b[1;1HScore: %d", score);
+    iprintf("\x1b[2;1HDistance: %d m", distance);
+}
 
-// Vertical collision check
-                /*
-                if (birdY < pipes[i].y || birdY + BIRD_HEIGHT > pipes[i].y + PIPE_GAP) {
-                    // Collision with the pipe
-                    resetGame();
-                    iprintf("Game Over: Bird collided with a pipe.\n");
-                    return;
-                }
-                */
 
 
 //****************************************NEW CODE

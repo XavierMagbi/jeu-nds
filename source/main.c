@@ -9,9 +9,17 @@
 #include "pipe2.h"
 
 
+#include <maxmod9.h>
+#include "soundbank.h"
+#include "soundbank_bin.h"
+
+
+
+
+
+
 int keys; 
 
-int score = 0;    // Score initial
 bool showMessage = false ; 
 int blinkCounter = 0 ; 
 
@@ -60,24 +68,45 @@ for (int i = 0; i < NUM_PIPES; i++) {
 }
 
 
-
-
 int main(){
+
     consoleDemoInit();
-    initBackground();
-    initSpeedTimer();
-    initTimer();
+
+    // Init Backgrounds 
+    initMainScreenBackground();
+    initSubScreen();
+
+    //initSpeedTimer();
+
+    // Init Sprites 
     configureSprites();
     oamInit(&oamMain, SpriteMapping_1D_32, false);
     gameState = GAME_STATE_WAITING;
+
+
+
+    // SOUND 
+    //Init the sound library 
+    mmInitDefaultMem((mm_addr)soundbank_bin);
+    //Load Effect 
+    mmLoadEffect(SFX_JUMP);
+    mmLoadEffect(SFX_START);
+    mmLoadEffect(SFX_GAMEOVER);
+   
+
+     // Initialize game variables
+    //int score = 0;
+   // int distance = 0;
 
     while (1) {
         
         scanKeys();
         keys = keysDown();
+        //displayScoreAndDistance(score,distance);
 
        
         if (gameState == GAME_STATE_WAITING) {
+             initSubScreen();
             //setBirdPosition(SPRITE_BIRD,BIRDX_INIT,BIRDY_INIT);
             //setPipePosition(SPRITE_PIPE ,PIPE_INIT_X,PIPE_INIT_Y);
             if (keys & KEY_START) {
@@ -96,7 +125,9 @@ int main(){
 
        
         if (gameState == GAME_STATE_PLAYING) {
-            updateBackground();  
+
+            updateBackground(); 
+        
             if (birdY < GROUNDLEVEL) {
                 birdY += 0.5;
             } 
@@ -106,18 +137,23 @@ int main(){
 
             
             if ((keys & KEY_B) && birdY > 0) {
-                birdY += JUMPFORCE; 
+                birdY += JUMPFORCE ;
+                mmEffect(SFX_JUMP); 
             }
+            
+    
 
             checkCollisions(); // Check for collisions
             setBirdPosition(SPRITE_BIRD,birdX,birdY);
 
             updatePipes();
-            updateScore();
-            //printPipes(); 
+            //updateScore(score);
         }
+            
+        
 
         if(gameState == GAME_STATE_GAME_OVER){
+            mmEffect(SFX_GAMEOVER);
 
              if (keys & KEY_START){
 
@@ -133,5 +169,9 @@ int main(){
     }
 
     return 0;
+
 }
+
+    
+
 

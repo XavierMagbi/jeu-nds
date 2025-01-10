@@ -9,6 +9,7 @@
 #define GAME_STATE_PLAYING 1
 #define GAME_STATE_INIT 2
 #define GAME_STATE_GAME_OVER 3
+#define GAME_STATE_MENU 4 
 #define GROUNDLEVEL 128
 #define JUMPFORCE -10 
 #define GRAVITY 1
@@ -79,16 +80,13 @@ void drawpipe();
 // Pipes initialization 
 void drawPipes();
 
-void initBackground(); // Background Initialization
+void initMainScreenBackground(); // Background Initialization
 void updateBackground(); // Scrolling the background 
 
 // Fonctions qui étaient dans le main 
 
-//void initBird();
 void setPipePosition(int index, int x, int y);
 void resetGame();
-void handleInput();
-void updateGameLogic();
 void displayStartScreen();
 void configureSprites();
 void initPipes();
@@ -96,7 +94,9 @@ void updatePipes();
 void checkCollisions();
 void resetPipe();
 void updateScore();
+void initSubScreen();
 void displayGameOverScreen();
+void displayScoreAndDistance(int score, int distance);
 
 
 

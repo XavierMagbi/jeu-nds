@@ -1,32 +1,27 @@
 #include "timer.h"
 
-static TimerCallback gameUpdateCallback = NULL; // Callback function pointer
-int speedMultiplier = 1; // Constant for the speed of bachground's scrolling 
+// Global Variables
+static TimerCallback gameUpdateCallback = NULL; 
+int speedMultiplier = 1; 
 
+// Timer Functions
 void setTimerCallback(TimerCallback callback) {
     gameUpdateCallback = callback;
 }
 
 void initTimer() {
     TIMER0_CR = TIMER_ENABLE | TIMER_DIV_1024;
-    TIMER0_DATA = TIMER_FREQ_1024(1); // 60 Hz
+    TIMER0_DATA = TIMER_FREQ_1024(1); // 1-second intervals
 
     irqSet(IRQ_TIMER0, timer_ISR);
     irqEnable(IRQ_TIMER0);
 }
 
 void timer_ISR() {
-  int blinkCounter = 0;
-  bool showMessage = true;
-
-    blinkCounter++;
-
-    if (blinkCounter >= 30) { // Toggle every 30 frames (~0.5 seconds at 60 FPS)
-        showMessage = !showMessage;
-        blinkCounter = 0;
+    if (gameUpdateCallback != NULL) {
+        gameUpdateCallback();
     }
 }
-
 
 void initSpeedTimer() {
     TIMER1_CR = TIMER_ENABLE | TIMER_DIV_1024;
@@ -37,15 +32,11 @@ void initSpeedTimer() {
 }
 
 void speedTimerISR() {
-    int tick = 0;
-    while(speedMultiplier < 5){
-        tick++;
-        if (tick>10){
-            speedMultiplier++;
-            tick = 0; 
-        }
+    if (speedMultiplier < 5) {
+        speedMultiplier++;
     }
 }
+
 
 
 
