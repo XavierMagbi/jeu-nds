@@ -20,8 +20,9 @@
 
 int keys; 
 
-bool showMessage = false ; 
-int blinkCounter = 0 ; 
+int score = 0;    // Score initial
+int distance = 0;
+
 
 int birdX = BIRDX_INIT; // Center of the screen horizontally
 float birdY = BIRDY_INIT ;      // Starts at the ground
@@ -43,25 +44,6 @@ void printPipes() {
                 
     }
     
-    //iprintf("BIRD: x = %d, y = %d\n", birdX, (int)birdY);
-    
-/*
-    int index = 0; // Initialize an index variable
-
-for (int i = 0; i < NUM_PIPES; i++) {
-    int sprite_index = 1 + (i * 2); // Calculate the sprite index
-    
-    // Print pipe details
-    iprintf("Pipe %d: sprite_index = %d, x = %d, y = %d\n", 
-            index + 1,         // Use the local index
-            sprite_index,      // Sprite index
-            pipes[i].x,        // Pipe x-coordinate
-            pipes[i].y);       // Pipe y-coordinate
-    
-    index++; // Increment index
-}
-*/
-
 
 }
 
@@ -74,13 +56,12 @@ int main(){
     initMainScreenBackground();
     initSubScreen();
 
-    //initSpeedTimer();
 
-    // Init Sprites 
+    // Initialization of  sprites 
+
     configureSprites();
     oamInit(&oamMain, SpriteMapping_1D_32, false);
     gameState = GAME_STATE_WAITING;
-
 
 
     // SOUND 
@@ -90,11 +71,6 @@ int main(){
     mmLoadEffect(SFX_JUMP);
     mmLoadEffect(SFX_START);
     mmLoadEffect(SFX_GAMEOVER);
-   
-
-     // Initialize game variables
-    //int score = 0;
-   // int distance = 0;
 
     while (1) {
         
@@ -112,8 +88,8 @@ int main(){
 
         if (gameState == GAME_STATE_WAITING) {
             setBirdPosition(SPRITE_BIRD,BIRDX_INIT,BIRDY_INIT);
-            initGamePipes();
-            //setTubePosition(SPRITE_TUBE,TUBE_X,TUBE_Y);
+            initPipes();
+            setPipePosition(SPRITE_PIPE ,PIPE_INIT_X,PIPE_INIT_Y);
             
         }
 
@@ -134,12 +110,14 @@ int main(){
                 birdY += JUMPFORCE ;
                 mmEffect(SFX_JUMP); 
             }
-            
-            checkCollisions();
+            checkCollisions(); // Check for collisions
             setBirdPosition(SPRITE_BIRD,birdX,birdY);
+
             updatePipes();
-            //updatesTest();
-            //updateScore(score);
+            updateScore_and_Distance();
+            
+            
+           
         }
             
         

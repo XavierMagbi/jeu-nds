@@ -19,7 +19,6 @@
 // Sprite indices
 #define SPRITE_BIRD 0
 #define SPRITE_PIPE 1
-#define SPRITE_TUBE 3
 
 //Screen dimensions
 #define SCREEN_WIDTH	256
@@ -37,7 +36,7 @@
 #define PIPE_WIDTH 52
 #define PIPE_HEIGHT 64
 #define PIPE_GAP 60
-#define NUM_PIPES 6
+#define NUM_PIPES 4
 
 // Tube's coordinates
 #define PIPE_WIDTH 52
@@ -48,7 +47,7 @@
 
 // Coordinates of pipe
 #define PIPE_INIT_X 140
-#define PIPE_INIT_Y GROUNDLEVEL
+#define PIPE_INIT_Y 128
 
 
 
@@ -62,9 +61,9 @@ typedef struct {
 
 extern Pipe pipes[NUM_PIPES];
 extern int sprite_num[NUM_PIPES];
-extern int score ;    // Score initial
-extern int blinkCounter ;    // Compteur pour gérer le clignotement
-extern bool showMessage ; // Indique si le message est affiché
+extern int score ;    // Initial Score 
+extern int distance; // Intial Distance
+
 
 // Bird's variable
 extern int birdX; // Center of the screen horizontally
@@ -102,14 +101,13 @@ void resetGame();
 void displayStartScreen();
 void configureSprites();
 void initPipes();
-void initGamePipes();
 void updatePipes();
 void checkCollisions();
 void resetPipe();
-void updateScore();
+void updateScore_and_Distance();
 void initSubScreen();
+void displayGameOverPanel(int score, int bestScore, int distance);
 void displayGameOverScreen();
-void displayScoreAndDistance(int score, int distance);
 
 
 

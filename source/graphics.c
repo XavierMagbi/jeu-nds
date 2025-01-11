@@ -16,17 +16,13 @@
 int scrollX = 0;
 u16 *birdgfx;
 u16 *Pipegfx;
-u16 *Tubegfx;
-u16 *Pipegfx1;
 u16 *Pipegfx2;
-u16 *Pipegfx3;
 
 
 Pipe pipes[NUM_PIPES];
 
 
 extern int speedMultiplier; 
-bool printpipe;
 
 
 // Main engine configuration 
@@ -64,13 +60,7 @@ void resetPipe() {
 void updateBackground() {
     speedTimerISR();
     scrollX = (scrollX + 1) % 256; // Accelerated scrolling
-    REG_BG0HOFS = scrollX; 
-
-    if scrollX == 0 {
-        printpipe = true;
-    }
-
-    
+    REG_BG0HOFS = scrollX;   
 }
 
 void setBirdPosition(int index, int x, int y) {
@@ -83,13 +73,15 @@ void setPipePosition(int index, int x, int y) {
 }
 
 void setPipePositiondouble(int index, int x, int y, int z ) {
-    oamSet(&oamMain, index, x, y, 0, 0, SpriteSize_64x64, SpriteColorFormat_256Color, Pipegfx, -1, false, false, false, false, false);  //DOWN
-    oamSet(&oamMain, index+1, x, z, 0, 0, SpriteSize_64x64, SpriteColorFormat_256Color, Pipegfx, -1, false, false, false, true, false); //UP
+    oamSet(&oamMain, index, x, y, 0, 0, SpriteSize_64x64, SpriteColorFormat_256Color, Pipegfx, -1, false, false, false, false, false);  //DOWN CORRECT
+
+
+    oamSet(&oamMain, index+1, x, z, 0, 0, SpriteSize_64x64, SpriteColorFormat_256Color, Pipegfx, -1, false, false, false, true, false); //UP CORRECT
+
+    oamSet(&oamMain, index+5, x, -22, 0, 0, SpriteSize_64x64, SpriteColorFormat_256Color, Pipegfx, -1, false, false, false, false, false); //UP CORRECT
+    
 }
 
-void setTubePosition(int index , int x , int y){
-     oamSet(&oamMain, index, x, y, 0, 0, SpriteSize_64x64, SpriteColorFormat_256Color, Pipegfx2, -1, false, false, false, true, false);//UP 
-}
 
 
 
@@ -106,131 +98,99 @@ void resetGame() {                    // Score réinitialisé
 
 
 void displayStartScreen() {
-    blinkCounter++;
 
-    // Alterne tous les 30 frames (environ 0.5 secondes si 60 FPS)
-    if (blinkCounter >= 30) {
-        showMessage = !showMessage; // Alterne entre afficher et cacher
-        blinkCounter = 0;          // Réinitialise le compteur
-    }
+    // To complete 
 
-    // Efface la ligne du message
-    iprintf("\x1b[10;0H                              "); // Remplit l’espace avec des espaces
-
-    // Affiche le message uniquement si showMessage est vrai
-    if (showMessage) {
-        iprintf("\x1b[10;5HAppuyez sur A pour jouer");
-    }
 }
 
 void configureSprites(){
      // Map VRAM_B for the bird sprite
     VRAM_B_CR = VRAM_ENABLE | VRAM_B_MAIN_SPRITE_0x06400000;
 
+
+
     oamInit(&oamMain, SpriteMapping_1D_32, false);
     birdgfx = oamAllocateGfx(&oamMain, SpriteSize_32x32, SpriteColorFormat_256Color);
     Pipegfx = oamAllocateGfx(&oamMain, SpriteSize_64x64, SpriteColorFormat_256Color);
-    Tubegfx = oamAllocateGfx(&oamMain, SpriteSize_64x64, SpriteColorFormat_256Color);
+    //Pipegfx2 = oamAllocateGfx(&oamMain, SpriteSize_64x64, SpriteColorFormat_256Color);
 
     // Load bird sprite palette and tiles
     dmaCopy(birdPal, SPRITE_PALETTE , birdPalLen); // Load bird palette at index 0
-    dmaCopy(pipe1Pal, &SPRITE_PALETTE[birdPalLen/2], pipe1PalLen);
-    dmaCopy(pipe2Pal, &SPRITE_PALETTE[pipe1PalLen/2], pipe2PalLen);
+    //dmaCopy(pipe1Pal, &SPRITE_PALETTE[birdPalLen/2], pipe1PalLen);
+    dmaCopy(pipe2Pal, &SPRITE_PALETTE[birdPalLen/2], pipe2PalLen);
+    //dmaCopy(pipe1Pal, &SPRITE_PALETTE[pipe1PalLen/2], pipe1PalLen);
     dmaCopy(birdTiles, birdgfx, birdTilesLen); // Load bird tiles
-    dmaCopy(pipe1Tiles , Pipegfx, pipe1TilesLen);   // Load pipe tiles
-    dmaCopy(pipe2Tiles , Tubegfx, pipe2TilesLen);        // Load tube tiles
+    //dmaCopy(pipe1Tiles , Pipegfx, pipe1TilesLen);   // Load pipe tiles
+    dmaCopy(pipe2Tiles , Pipegfx, pipe2TilesLen);   // Load pipe tiles
+    //dmaCopy(pipe1Tiles , Pipegfx2, pipe1TilesLen);              // Load bird tiles
 
 }
+
 
 void initPipes() {
-
-    if (printpipe){
-
-        for (int i = 0; i < NUM_PIPES; i += 2) {
-        pipes[i].x = SCREEN_WIDTH + (i / 2) * 40;      // Apply 40px horizontal spacing
-        pipes[i + 1].x = pipes[i].x;                   // Sync lower pipe with upper pipe
-
-        int pattern = (i / 2) % 3;  // Cycle through 3 patterns
-
-        if (pattern == 0) {
-            // Pattern 1: Upper at 0, lower at 150
-            pipes[i].y = 0;
-            pipes[i + 1].y = 150;
-        } else if (pattern == 1) {
-            // Pattern 2: Upper at 20, lower at 180
-            pipes[i].y = 20;
-            pipes[i + 1].y = 180;
+    for (int i = 0; i < NUM_PIPES; i++) {
+        int pair_number = i / 2;
+        pipes[i].x = PIPE_INIT_X + (pair_number * 140);
+        if (i % 2 == 0) {
+            // Upper pipe
+            pipes[i].y = 0; // Fixed at the top of the screen
         } else {
-            // Pattern 3: Upper at 10, lower at 170
-            pipes[i].y = 10;
-            pipes[i + 1].y = 170;
+            // Lower pipe
+            pipes[i].y = 150; // Fixed at the predefined bottom Y-coordinate
         }
     }
-
-
-    }
-    
 }
-
-void initGamePipes() {
-    initPipes();  // Initialize pipe positions
-
-    // Initialize all 3 pipe pairs (6 pipes total)
-    for (int i = 0; i < NUM_PIPES; i += 2) {
-        setPipePositiondouble(i, pipes[i].x, pipes[i].y, pipes[i + 1].y);
-    }
-}
-
-
 
 
 void updatePipes() {
-    for (int i = 0; i < NUM_PIPES; i += 2) {
-        pipes[i].x -= 1 * speedMultiplier;    // Move upper pipe
-        pipes[i + 1].x = pipes[i].x;         // Sync lower pipe
+    int spriteIndex = 1;
+    for (int i = 0; i < NUM_PIPES; i++) {
+        pipes[i].x -= 1;
 
-        // Reset pipes when off-screen
-        if (pipes[i].x + PIPE_WIDTH < 0) {
-            pipes[i].x = SCREEN_WIDTH + 40;  // Reset with 40px spacing
-            pipes[i + 1].x = pipes[i].x;
-
-            int pattern = ((i / 2) + 1) % 3;  // Cycle to next pattern
-
-            if (pattern == 0) {
-                // Pattern 1: Upper at 0, lower at 150
-                pipes[i].y = 0;
-                pipes[i + 1].y = 150;
-            } else if (pattern == 1) {
-                // Pattern 2: Upper at 20, lower at 180
-                pipes[i].y = 20;
-                pipes[i + 1].y = 180;
-            } else {
-                // Pattern 3: Upper at 10, lower at 170
-                pipes[i].y = 10;
-                pipes[i + 1].y = 170;
-            }
+        if (i % 2 == 0) {
+            // Set position for upper and lower pipes
+            setPipePositiondouble(spriteIndex, pipes[spriteIndex-1].x, pipes[spriteIndex].y, pipes[spriteIndex-1].y);
+            spriteIndex += 2;
         }
+        
+        // Reset pipe if it moves off-screen
+        if (pipes[i].x + 90 < 0) {
+            pipes[i].x = SCREEN_WIDTH;
 
-        // Update the sprite positions
-        setPipePosition(i, pipes[i].x, pipes[i].y);           // Upper pipe
-        setPipePosition(i + 1, pipes[i + 1].x, pipes[i + 1].y); // Lower pipe
+            
+           if (i % 2 == 0) {
+                
+                int maxUpperY = 150 - PIPE_HEIGHT - PIPE_GAP;
+                pipes[i].y = rand() % (maxUpperY > 0 ? maxUpperY : 1); 
+                } else {
+                    
+                    pipes[i].y = pipes[i - 1].y + PIPE_HEIGHT + PIPE_GAP;
+
+                    if (pipes[i].y > 150) {
+                        pipes[i].y = 150;
+                    }
+                }
+
+            
+        }
     }
 }
 
+void updateScore_and_Distance() {
 
-void updateScore(int score) {
+    distance = birdX + distance;
     
     for (int i = 0; i < NUM_PIPES; i++){
-        iprintf("\x1b[10;cela marche");
 
-        if (birdX > pipes[i].x + PIPE_WIDTH) { // Passed the pipe
-            //pipes[i].x = -1; // Mark pipe as counted
+        if (birdX == pipes[i].x + PIPE_WIDTH && (i % 2 == 0)  ) { // Passed the pipe
+            
             score++;
-            iprintf("Score: %d\n", score);
+            //iprintf("Score: %d\n", score);
         }
         
     }
  }
+
 
 void initSubScreen(){
 
@@ -252,7 +212,22 @@ void displayGameOverScreen() {
 
     gameState = GAME_STATE_GAME_OVER;
 
+/*
+    // Enable VRAM for the main screen background
+    VRAM_A_CR = VRAM_ENABLE | VRAM_A_MAIN_BG;
 
+    // Set BG0 configuration for the main screen
+    BGCTRL[0] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(0) | BG_TILE_BASE(2);
+
+    // Load the Game Over background
+    dmaCopy(gameover_bgTiles, BG_TILE_RAM(2), gameover_bgTilesLen);
+    dmaCopy(gameover_bgMap, BG_MAP_RAM(0), gameover_bgMapLen);
+    dmaCopy(gameover_bgPal, BG_PALETTE, gameover_bgPalLen);
+    
+*/
+
+
+   // Displaying Sub_Game_Over Scren 
     REG_DISPCNT_SUB = MODE_0_2D | DISPLAY_BG0_ACTIVE;
 
     VRAM_C_CR = VRAM_ENABLE | VRAM_C_SUB_BG;
@@ -266,27 +241,47 @@ void displayGameOverScreen() {
     
 }
 
+void displayGameOverPanel(int score, int bestScore, int distance) {
+    // Draw the Game Over text
+    iprintf("\x1b[5;8H GAME OVER");
+
+    // Draw the box for score and distance
+    iprintf("\x1b[7;6H+------------------+");
+    iprintf("\x1b[8;6H|   SCORE: %d      |", score);
+    iprintf("\x1b[9;6H|   BEST:  %d      |", bestScore);
+    iprintf("\x1b[10;6H| DISTANCE: %d m  |", distance);
+    iprintf("\x1b[11;6H+------------------+");
+
+    // Instruction to restart
+    iprintf("\x1b[13;5HPRESS START TO RESTART");
+}
+
+
+
 void checkCollisions() {
     // Check ground and ceiling collision
     if (birdY >= GROUNDLEVEL || birdY <= 0) {
         // Collision with ground or ceiling
         displayGameOverScreen();
+        //resetGame()
         return;
     }
     
     // Check pipe collisions
     for (int i = 0; i < NUM_PIPES; i++) {
             // Horizontal collision check
-            if (birdX + BIRD_WIDTH  > pipes[i].x && birdX < pipes[i].x + PIPE_WIDTH) {
+            if (birdX + BIRD_WIDTH > pipes[i].x && birdX < pipes[i].x + PIPE_WIDTH) {
                 if (i % 2 == 0) {
                     if (birdY < (pipes[i].y+60)) {
                         displayGameOverScreen();
+                        //resetGame();
                         return;
                     }
                 } 
                 else {
-                    if (birdY + BIRD_HEIGHT-10 > pipes[i].y) {
+                    if (birdY + BIRD_HEIGHT > pipes[i].y+5) {
                     displayGameOverScreen();
+                    //resetGame();
                     return;
                     }
                 
@@ -296,14 +291,3 @@ void checkCollisions() {
         
         
  }
-
- void displayScoreAndDistance(int score, int distance) {
-    // Print the score and distance at the top-left corner
-    iprintf("\x1b[1;1HScore: %d", score);
-    iprintf("\x1b[2;1HDistance: %d m", distance);
-}
-
-
-
-//****************************************NEW CODE
-
