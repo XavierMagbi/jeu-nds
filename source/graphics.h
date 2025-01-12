@@ -78,7 +78,7 @@ extern int gameState; // État initial du jeu
 
 
 
-// Sprite Functions
+// Sprite Functions To Manage the Bird and Pipes as Sprites 
 void configureBird();
 void setBirdPosition(int index,int x, int y);
 void setPipePosition(int index, int x, int y);
@@ -87,30 +87,29 @@ void setTubePosition(int index , int x , int y);
 void setPipePositionDOWN(int index, int x, int y);
 void drawpipe();
 
-
-// Pipes initialization 
+// Pipes initialization & Updates 
 void drawPipes();
-
-void initMainScreenBackground(); // Background Initialization
-void updateBackground(); // Scrolling the background 
-
-// Fonctions qui étaient dans le main 
-
-void setPipePosition(int index, int x, int y);
-void resetGame();
-void displayStartScreen();
-void configureSprites();
 void initPipes();
 void updatePipes();
-void checkCollisions();
-void resetPipe();
-void updateScore_and_Distance();
+void setPipePosition(int index, int x, int y);
+
+// BAckground Initialization & Update 
+void initMainScreenBackground(); // Background Initialization
+void updateBackground(); // Scrolling the background 
 void initSubScreen();
-void displayGameOverPanel(int score, int bestScore, int distance);
+void UpdateSubScreen();
+
+//Game State Management 
+void resetGame();
+void resetPipe();
+void configureSprites();
+void displayMenuScreen();
 void displayGameOverScreen();
+void displayGameOverPanel(int score, int bestScore, int distance);
 
-
-
+// Game Logic & Mechanics 
+void checkCollisions();
+void updateScore_and_Distance();
 
 
 #endif

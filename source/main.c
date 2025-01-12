@@ -4,106 +4,127 @@
 #include <nds/arm9/background.h>
 #include "graphics.h"
 #include "timer.h"
-#include "bird.h"
-#include "pipe1.h"
-#include "pipe2.h"
 
 
+// Library for Sounds
 #include <maxmod9.h>
 #include "soundbank.h"
 #include "soundbank_bin.h"
 
 
-
-
-
-
 int keys; 
 
-int score = 0;    // Score initial
+// Variables for Game
+int score = 0;    
 int distance = 0;
 
-
+// Variables of the bird 
 int birdX = BIRDX_INIT; // Center of the screen horizontally
 float birdY = BIRDY_INIT ;      // Starts at the ground
 int birdVelocity = 0;         // Initial velocity (stationary)
 bool isJumping = false;       // Tracks whether the bird is mid-jump
 
-int gameState = GAME_STATE_INIT;
+
+
+int gameState = GAME_STATE_INIT; // Game's State
 
 
 
-void printPipes() {
-    iprintf("----- Pipes List -----\n");
+void checkTouchInput() {
+    touchPosition touch;
+    scanKeys();
+    int keys = keysDown();
     
-    for(int i = 0; i < NUM_PIPES; i++) {
-        iprintf("Pipe %d: x = %d, y = %d\n", 
-            i, 
-            pipes[i].x, 
-            pipes[i].y);
-                
+    if (keys & KEY_TOUCH) {
+        touchRead(&touch);
+
+        // Check if Flappy on the sub-screen is touched
+        if (touch.px >= 112 && touch.px <= 144 && touch.py >= 96 && touch.py <= 128) {
+            // Trigger jump in the main game
+            birdY += JUMPFORCE;
+            mmEffect(SFX_JUMP);  // Play jump sound effect
+        }
     }
-    
-
 }
 
 
 int main(){
 
+
     consoleDemoInit();
-
-    // Init Backgrounds 
-    initMainScreenBackground();
-    initSubScreen();
-
-
-    // Initialization of  sprites 
-
-    configureSprites();
-    oamInit(&oamMain, SpriteMapping_1D_32, false);
-    gameState = GAME_STATE_WAITING;
 
 
     // SOUND 
+
     //Init the sound library 
     mmInitDefaultMem((mm_addr)soundbank_bin);
     //Load Effect 
     mmLoadEffect(SFX_JUMP);
     mmLoadEffect(SFX_START);
     mmLoadEffect(SFX_GAMEOVER);
+    mmLoadEffect(SFX_INTRO);
+
+    gameState = GAME_STATE_MENU;
 
     while (1) {
         
         scanKeys();
         keys = keysDown();
-        //displayScoreAndDistance(score,distance);
+        
+    if (gameState == GAME_STATE_MENU) {
+        
+        static bool introPlayed = false;
+        
+        if (!introPlayed) {
+            mmEffect(SFX_INTRO);
+            introPlayed = true;
+        }
+        
+        displayMenuScreen();
+        
+        if (keys & KEY_START) {
+            consoleClear();
+            mmEffect(SFX_START);
+            gameState = GAME_STATE_WAITING;
+        }
+    }
+    
+    if (gameState == GAME_STATE_WAITING) {
 
-       
-        if (gameState == GAME_STATE_WAITING) {
+             // Init Backgrounds
+             initMainScreenBackground();
              initSubScreen();
-            if (keys & KEY_START) {
+             
+             // Configuration of  sprites 
+             configureSprites();
+             oamInit(&oamMain, SpriteMapping_1D_32, false);
+
+             //Initialization of pipes
+             setBirdPosition(SPRITE_BIRD,BIRDX_INIT,BIRDY_INIT);
+             initPipes();
+             setPipePosition(SPRITE_PIPE ,PIPE_INIT_X,PIPE_INIT_Y);
+
+
+            if (keys & KEY_A) {
                 gameState = GAME_STATE_PLAYING;
             }
         }
 
-        if (gameState == GAME_STATE_WAITING) {
-            setBirdPosition(SPRITE_BIRD,BIRDX_INIT,BIRDY_INIT);
-            initPipes();
-            setPipePosition(SPRITE_PIPE ,PIPE_INIT_X,PIPE_INIT_Y);
-            
-        }
-
+       
        
         if (gameState == GAME_STATE_PLAYING) {
 
-            updateBackground(); 
-        
+            updateBackground();
+            UpdateSubScreen(); 
+    
             if (birdY < GROUNDLEVEL) {
                 birdY += 0.5;
             } 
             else {
                 birdY = GROUNDLEVEL; 
             }
+
+            checkTouchInput();
 
             
             if ((keys & KEY_B) && birdY > 0) {

@@ -1,14 +1,21 @@
 
+#include <nds/arm9/background.h>
 #include <nds.h>
 #include "graphics.h"
-#include <nds/arm9/background.h>
 #include <stdio.h>
+
+// GRIT file for Sprites 
 #include"bird.h"
 #include "pipe1.h"
 #include "pipe2.h"
-#include "background2.h" // GRIT file for background tiles
+
+// GRIT file for background tiles
+#include "background.h" 
+#include "background2.h" 
 #include "Subbg.h"
+#include "SubGameBg.h"
 #include "GameOver.h"
+#include "Menu.h"
 
 
 // Global variables 
@@ -23,6 +30,7 @@ Pipe pipes[NUM_PIPES];
 
 
 extern int speedMultiplier; 
+bool background = true; // To switch with the two backgrounds 
 
 
 // Main engine configuration 
@@ -40,11 +48,24 @@ void initMainScreenBackground() {
     BGCTRL[0] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(0) | BG_TILE_BASE(2);
 
 
-
+    if (background){
     dmaCopy(background2Tiles, BG_TILE_RAM(2), background2TilesLen);
     dmaCopy(background2Map, BG_MAP_RAM(0), background2MapLen);
     dmaCopy(background2Pal, BG_PALETTE, background2PalLen);
+
+    }
+
+    else{
+
+    dmaCopy(backgroundTiles, BG_TILE_RAM(2), backgroundTilesLen);
+    dmaCopy(backgroundMap, BG_MAP_RAM(0), backgroundMapLen);
+    dmaCopy(backgroundPal, BG_PALETTE, backgroundPalLen);
+
+    }
+
+
 }
+
 
 void resetPipe() {
     for(int i = 0; i < NUM_PIPES; i++) {
@@ -92,16 +113,48 @@ void resetGame() {                    // Score réinitialisé
     birdY = BIRDY_INIT;
 
     //resetPipe();
+    background = !background;
     consoleClear();                // Efface l'écran de la console
     
 }
 
 
-void displayStartScreen() {
+void displayMenuScreen() {
 
-    // To complete 
+    // Configure sub-screen with BG0 for text
+    REG_DISPCNT = MODE_0_2D | DISPLAY_BG0_ACTIVE;
 
+    // Use VRAM C for sub-screen
+    VRAM_A_CR = VRAM_ENABLE | VRAM_A_MAIN_BG;
+
+    // Configure BG0 on the sub-screen
+    BGCTRL[0] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(0) | BG_TILE_BASE(2);
+
+    dmaCopy(MenuTiles, BG_TILE_RAM(2), MenuTilesLen);
+    dmaCopy(MenuMap, BG_MAP_RAM(0), MenuMapLen);
+    dmaCopy(MenuPal, BG_PALETTE, MenuPalLen);
+    
+
+    static bool showMessage = true;
+    static int blinkCounter = 0;
+
+
+    blinkCounter++;
+    if (blinkCounter >= 30) {  // Blink every half second
+        showMessage = !showMessage;
+        blinkCounter = 0;
+    }
+
+
+    if (showMessage) {
+        iprintf("\x1b[10;5HPRESS START TO PLAY");
+    } else {
+        iprintf("\x1b[10;5H                     ");  // Clear text
+    }
+
+    
 }
+
 
 void configureSprites(){
      // Map VRAM_B for the bird sprite
@@ -192,39 +245,42 @@ void updateScore_and_Distance() {
  }
 
 
-void initSubScreen(){
+void initSubScreen() {
 
+    // Set display control for sub-screen
     REG_DISPCNT_SUB = MODE_0_2D | DISPLAY_BG0_ACTIVE;
 
+    // Enable VRAM for the sub-screen
     VRAM_C_CR = VRAM_ENABLE | VRAM_C_SUB_BG;
 
-    BGCTRL_SUB[0] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(0) | BG_TILE_BASE(2);
+    // Configure BG0 on the sub-screen
+    BGCTRL_SUB[0] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(1) | BG_TILE_BASE(1);
 
-
-    dmaCopy(SubbgTiles, BG_TILE_RAM_SUB(2), SubbgTilesLen);
-    dmaCopy(SubbgMap, BG_MAP_RAM_SUB(0), SubbgMapLen);
+    // Load the background graphics
+    dmaCopy(SubbgTiles, BG_TILE_RAM_SUB(1), SubbgTilesLen);
+    dmaCopy(SubbgMap, BG_MAP_RAM_SUB(1), SubbgMapLen);
     dmaCopy(SubbgPal, BG_PALETTE_SUB, SubbgPalLen);
+}
 
+void UpdateSubScreen(){
+
+    // Enable VRAM for the sub-screen background
+    VRAM_C_CR = VRAM_ENABLE | VRAM_C_SUB_BG;
+
+    // Configure BG0 on the sub-screen
+    BGCTRL_SUB[0] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(1) | BG_TILE_BASE(2);
+
+
+    // Load the background for the sub-screen
+    dmaCopy(SubGameBgTiles, BG_TILE_RAM_SUB(2), SubGameBgTilesLen);
+    dmaCopy(SubGameBgMap, BG_MAP_RAM_SUB(1), SubGameBgMapLen);
+    dmaCopy(SubGameBgPal, BG_PALETTE_SUB, SubGameBgPalLen);
 }
 
 
 void displayGameOverScreen() {
 
     gameState = GAME_STATE_GAME_OVER;
-
-/*
-    // Enable VRAM for the main screen background
-    VRAM_A_CR = VRAM_ENABLE | VRAM_A_MAIN_BG;
-
-    // Set BG0 configuration for the main screen
-    BGCTRL[0] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(0) | BG_TILE_BASE(2);
-
-    // Load the Game Over background
-    dmaCopy(gameover_bgTiles, BG_TILE_RAM(2), gameover_bgTilesLen);
-    dmaCopy(gameover_bgMap, BG_MAP_RAM(0), gameover_bgMapLen);
-    dmaCopy(gameover_bgPal, BG_PALETTE, gameover_bgPalLen);
-    
-*/
 
 
    // Displaying Sub_Game_Over Scren 
@@ -258,12 +314,12 @@ void displayGameOverPanel(int score, int bestScore, int distance) {
 
 
 
+
 void checkCollisions() {
     // Check ground and ceiling collision
     if (birdY >= GROUNDLEVEL || birdY <= 0) {
         // Collision with ground or ceiling
         displayGameOverScreen();
-        //resetGame()
         return;
     }
     
@@ -274,14 +330,12 @@ void checkCollisions() {
                 if (i % 2 == 0) {
                     if (birdY < (pipes[i].y+60)) {
                         displayGameOverScreen();
-                        //resetGame();
                         return;
                     }
                 } 
                 else {
                     if (birdY + BIRD_HEIGHT > pipes[i].y+5) {
                     displayGameOverScreen();
-                    //resetGame();
                     return;
                     }
                 
