@@ -1,1 +1,0 @@
-SubGameBg.o: SubGameBg.s

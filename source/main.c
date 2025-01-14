@@ -17,6 +17,7 @@ int keys;
 // Variables for Game
 int score = 0;    
 int distance = 0;
+int bestScore = 0;
 
 // Variables of the bird 
 int birdX = BIRDX_INIT; // Center of the screen horizontally
@@ -85,15 +86,15 @@ int main(){
         if (keys & KEY_START) {
             consoleClear();
             mmEffect(SFX_START);
-            gameState = GAME_STATE_WAITING;
+            gameState = GAME_STATE_INIT;
         }
     }
-    
-    if (gameState == GAME_STATE_WAITING) {
 
-             // Init Backgrounds
+    if(gameState == GAME_STATE_INIT){
+
+          // Init Backgrounds
              initMainScreenBackground();
-             initSubScreen();
+             //initSubScreen();
              
              // Configuration of  sprites 
              configureSprites();
@@ -104,18 +105,19 @@ int main(){
              initPipes();
              setPipePosition(SPRITE_PIPE ,PIPE_INIT_X,PIPE_INIT_Y);
 
+             gameState = GAME_STATE_WAITING;
+    }
+    
+    if (gameState == GAME_STATE_WAITING) {
 
             if (keys & KEY_A) {
                 gameState = GAME_STATE_PLAYING;
             }
         }
-
-       
-       
         if (gameState == GAME_STATE_PLAYING) {
 
             updateBackground();
-            UpdateSubScreen(); 
+            //UpdateSubScreen(); 
     
             if (birdY < GROUNDLEVEL) {
                 birdY += 0.5;
@@ -135,7 +137,7 @@ int main(){
             setBirdPosition(SPRITE_BIRD,birdX,birdY);
 
             updatePipes();
-            updateScore_and_Distance();
+            updateScore();
             
             
            
@@ -144,6 +146,7 @@ int main(){
         
 
         if(gameState == GAME_STATE_GAME_OVER){
+            displayGameOverPanel();
             mmEffect(SFX_GAMEOVER);
 
              if (keys & KEY_START){

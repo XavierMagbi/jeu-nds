@@ -63,6 +63,7 @@ extern Pipe pipes[NUM_PIPES];
 extern int sprite_num[NUM_PIPES];
 extern int score ;    // Initial Score 
 extern int distance; // Intial Distance
+extern int bestScore;
 
 
 // Bird's variable
@@ -103,13 +104,15 @@ void UpdateSubScreen();
 void resetGame();
 void resetPipe();
 void configureSprites();
+void disableSprites();
 void displayMenuScreen();
 void displayGameOverScreen();
-void displayGameOverPanel(int score, int bestScore, int distance);
+void clearSubScreenBackgrounds();
+void displayGameOverPanel();
 
 // Game Logic & Mechanics 
 void checkCollisions();
-void updateScore_and_Distance();
+void updateScore();
 
 
 #endif

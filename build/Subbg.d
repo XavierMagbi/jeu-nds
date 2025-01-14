@@ -1,1 +1,0 @@
-Subbg.o: Subbg.s

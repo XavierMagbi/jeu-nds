@@ -80,7 +80,8 @@ void resetPipe() {
 
 void updateBackground() {
     speedTimerISR();
-    scrollX = (scrollX + 1) % 256; // Accelerated scrolling
+    scrollX = (scrollX + 1) % 256;
+    distance = distance + 1;
     REG_BG0HOFS = scrollX;   
 }
 
@@ -95,12 +96,8 @@ void setPipePosition(int index, int x, int y) {
 
 void setPipePositiondouble(int index, int x, int y, int z ) {
     oamSet(&oamMain, index, x, y, 0, 0, SpriteSize_64x64, SpriteColorFormat_256Color, Pipegfx, -1, false, false, false, false, false);  //DOWN CORRECT
-
-
     oamSet(&oamMain, index+1, x, z, 0, 0, SpriteSize_64x64, SpriteColorFormat_256Color, Pipegfx, -1, false, false, false, true, false); //UP CORRECT
-
     oamSet(&oamMain, index+5, x, -22, 0, 0, SpriteSize_64x64, SpriteColorFormat_256Color, Pipegfx, -1, false, false, false, false, false); //UP CORRECT
-    
 }
 
 
@@ -108,18 +105,18 @@ void setPipePositiondouble(int index, int x, int y, int z ) {
 
 // Fonction pour réinitialiser le jeu en cas de Game Over
 void resetGame() {                    // Score réinitialisé
-    gameState = GAME_STATE_WAITING; // Retour à l'état d'attente
+    gameState = GAME_STATE_INIT; // Retour à l'état d'attente
     birdX = BIRDX_INIT;
     birdY = BIRDY_INIT;
 
     //resetPipe();
     background = !background;
-    consoleClear();                // Efface l'écran de la console
-    
+    consoleClear();                // Efface l'écran de la console   
 }
 
 
 void displayMenuScreen() {
+    consoleClear();
 
     // Configure sub-screen with BG0 for text
     REG_DISPCNT = MODE_0_2D | DISPLAY_BG0_ACTIVE;
@@ -133,6 +130,8 @@ void displayMenuScreen() {
     dmaCopy(MenuTiles, BG_TILE_RAM(2), MenuTilesLen);
     dmaCopy(MenuMap, BG_MAP_RAM(0), MenuMapLen);
     dmaCopy(MenuPal, BG_PALETTE, MenuPalLen);
+
+    
     
 
     static bool showMessage = true;
@@ -151,6 +150,7 @@ void displayMenuScreen() {
     } else {
         iprintf("\x1b[10;5H                     ");  // Clear text
     }
+    
 
     
 }
@@ -159,8 +159,6 @@ void displayMenuScreen() {
 void configureSprites(){
      // Map VRAM_B for the bird sprite
     VRAM_B_CR = VRAM_ENABLE | VRAM_B_MAIN_SPRITE_0x06400000;
-
-
 
     oamInit(&oamMain, SpriteMapping_1D_32, false);
     birdgfx = oamAllocateGfx(&oamMain, SpriteSize_32x32, SpriteColorFormat_256Color);
@@ -178,6 +176,14 @@ void configureSprites(){
     //dmaCopy(pipe1Tiles , Pipegfx2, pipe1TilesLen);              // Load bird tiles
 
 }
+
+void disableSprites() {
+    for (int i = 0; i < 128; i++) {
+        oamSet(&oamMain, i, 0, 0, 0, 0, SpriteSize_32x32, SpriteColorFormat_256Color, NULL, -1, false, false, false, false, false);
+    }
+    oamUpdate(&oamMain);
+}
+
 
 
 void initPipes() {
@@ -229,9 +235,8 @@ void updatePipes() {
     }
 }
 
-void updateScore_and_Distance() {
+void updateScore() {
 
-    distance = birdX + distance;
     
     for (int i = 0; i < NUM_PIPES; i++){
 
@@ -247,28 +252,25 @@ void updateScore_and_Distance() {
 
 void initSubScreen() {
 
-    // Set display control for sub-screen
-    REG_DISPCNT_SUB = MODE_0_2D | DISPLAY_BG0_ACTIVE;
-
     // Enable VRAM for the sub-screen
     VRAM_C_CR = VRAM_ENABLE | VRAM_C_SUB_BG;
 
-    // Configure BG0 on the sub-screen
-    BGCTRL_SUB[0] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(1) | BG_TILE_BASE(1);
+    // Set display control for sub-screen
+    REG_DISPCNT_SUB = MODE_0_2D | DISPLAY_BG1_ACTIVE;
+
+
+    // Configure BG1 for dynamic updates
+    BGCTRL_SUB[1] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(0) | BG_TILE_BASE(1);
 
     // Load the background graphics
     dmaCopy(SubbgTiles, BG_TILE_RAM_SUB(1), SubbgTilesLen);
-    dmaCopy(SubbgMap, BG_MAP_RAM_SUB(1), SubbgMapLen);
+    dmaCopy(SubbgMap, BG_MAP_RAM_SUB(0), SubbgMapLen);
     dmaCopy(SubbgPal, BG_PALETTE_SUB, SubbgPalLen);
 }
 
 void UpdateSubScreen(){
-
-    // Enable VRAM for the sub-screen background
-    VRAM_C_CR = VRAM_ENABLE | VRAM_C_SUB_BG;
-
     // Configure BG0 on the sub-screen
-    BGCTRL_SUB[0] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(1) | BG_TILE_BASE(2);
+    BGCTRL_SUB[1] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(1) | BG_TILE_BASE(2);
 
 
     // Load the background for the sub-screen
@@ -280,39 +282,61 @@ void UpdateSubScreen(){
 
 void displayGameOverScreen() {
 
+     
+
+   // Disable sprites to clear the game objects
+    disableSprites();
+
+    REG_BG0HOFS = 0;  
+
     gameState = GAME_STATE_GAME_OVER;
 
 
-   // Displaying Sub_Game_Over Scren 
-    REG_DISPCNT_SUB = MODE_0_2D | DISPLAY_BG0_ACTIVE;
+    // Set VRAM_A for the Game Over background
+    VRAM_A_CR = VRAM_ENABLE | VRAM_A_MAIN_BG;
 
-    VRAM_C_CR = VRAM_ENABLE | VRAM_C_SUB_BG;
+    // Configure background 0
+    REG_DISPCNT = MODE_0_2D | DISPLAY_BG0_ACTIVE;
+    BGCTRL[0] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(0) | BG_TILE_BASE(2);
 
-    BGCTRL_SUB[0] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(1) | BG_TILE_BASE(3);
-
-    dmaCopy(GameOverTiles, BG_TILE_RAM_SUB(3), GameOverTilesLen);
-    dmaCopy(GameOverMap, BG_MAP_RAM_SUB(1), GameOverMapLen);
-    dmaCopy(GameOverPal, BG_PALETTE_SUB, GameOverPalLen);
-
+    // Load the Game Over graphics (converted with GRIT)
+    dmaCopy(GameOverTiles, BG_TILE_RAM(2), GameOverTilesLen);
+    dmaCopy(GameOverMap, BG_MAP_RAM(0), GameOverMapLen);
+    dmaCopy(GameOverPal, BG_PALETTE, GameOverPalLen);
     
 }
 
-void displayGameOverPanel(int score, int bestScore, int distance) {
-    // Draw the Game Over text
+void clearSubScreenBackgrounds() {
+    // Disable all backgrounds on the sub screen
+    REG_DISPCNT_SUB &= ~(DISPLAY_BG0_ACTIVE | DISPLAY_BG1_ACTIVE | DISPLAY_BG2_ACTIVE | DISPLAY_BG3_ACTIVE);
+
+    // Disable all sub background controls
+    BGCTRL_SUB[0] = 0;
+    BGCTRL_SUB[1] = 0;
+    BGCTRL_SUB[2] = 0;
+    BGCTRL_SUB[3] = 0;
+
+    // Clear the text console
+    consoleClear();
+}
+
+void displayGameOverPanel(){
+
+    consoleClear();
+
+    // Draw the Game Over tex
     iprintf("\x1b[5;8H GAME OVER");
 
     // Draw the box for score and distance
     iprintf("\x1b[7;6H+------------------+");
-    iprintf("\x1b[8;6H|   SCORE: %d      |", score);
-    iprintf("\x1b[9;6H|   BEST:  %d      |", bestScore);
-    iprintf("\x1b[10;6H| DISTANCE: %d m  |", distance);
+    iprintf("\x1b[8;6H|   SCORE: %d       |", score);
+    iprintf("\x1b[9;6H|   BEST:  %d       |", bestScore);
+    iprintf("\x1b[10;6H|  DIST:  %d   m   |", distance);
     iprintf("\x1b[11;6H+------------------+");
 
     // Instruction to restart
     iprintf("\x1b[13;5HPRESS START TO RESTART");
 }
-
-
 
 
 void checkCollisions() {
