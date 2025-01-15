@@ -108,8 +108,8 @@ void configureSprites();
 void disableSprites();
 void displayMenuScreen();
 void displayGameOverScreen();
-void clearSubScreenBackgrounds();
 void displayGameOverPanel();
+void clearSubScreenBackgrounds();
 
 // Game Logic & Mechanics 
 void checkCollisions();

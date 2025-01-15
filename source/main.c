@@ -51,14 +51,8 @@ int main(){
 
     consoleDemoInit();
 
-    //Init the Timer to increase the speed of the game 
-    //initSpeedTimer(); *****YOUR TIMER
-    //////MY TIMER BEGIN
-    irqInit();               // Initialize the interrupt system
-    irqEnable(IRQ_VBLANK);   // Enable V-Blank interrupt (commonly used)
-    irqEnable(IRQ_KEYS);     // Enable keypad interrupt
-    REG_IME = 1; 
-    //////END
+   
+   
 
     // SOUND 
 
@@ -71,7 +65,6 @@ int main(){
     mmLoadEffect(SFX_INTRO);
 
     gameState = GAME_STATE_MENU;
-    initScrollTimer();
 
 
 
@@ -100,17 +93,24 @@ int main(){
     }
 
     if(gameState == GAME_STATE_INIT){
+
         
-             
+          
+             //Init the Timer to increase the speed of the game 
+            irqInit();               // Initialize the interrupt system
+            irqEnable(IRQ_VBLANK);   // Enable V-Blank interrupt (commonly used)
+            irqEnable(IRQ_KEYS);    // Enable keypad interrupt
+            REG_IME = 1; 
 
              // Init Backgrounds
              initMainScreenBackground();
-             //initSubScreen();
+             
 
-           
              // Configuration of  sprites 
              configureSprites();
              oamInit(&oamMain, SpriteMapping_1D_32, false);
+
+             initSubScreen(); // Init the Subbackground
 
              //Initialization of pipes
              setBirdPosition(SPRITE_BIRD,BIRDX_INIT,BIRDY_INIT);
@@ -125,13 +125,13 @@ int main(){
             if (keys & KEY_A) {
                 gameState = GAME_STATE_PLAYING;
                 irqEnable(IRQ_TIMER0);
+                initScrollTimer();
             }
         }
         if (gameState == GAME_STATE_PLAYING) {
 
-            //speedTimerISR();
             updateBackground();
-            //UpdateSubScreen(); 
+            UpdateSubScreen(); 
     
             if (birdY < GROUNDLEVEL) {
                 birdY += 0.5;
@@ -144,24 +144,20 @@ int main(){
 
             
             if ((keys & KEY_B) && birdY > 0) {
-                birdY += JUMPFORCE ;
                 mmEffect(SFX_JUMP); 
+                birdY += JUMPFORCE ;
             }
+
             checkCollisions(); // Check for collisions
             setBirdPosition(SPRITE_BIRD,birdX,birdY);
 
             updatePipes(&distance);
-            updateScore();
-            
-            
-           
+            updateScore(); 
         }
-            
-        
 
         if(gameState == GAME_STATE_GAME_OVER){
-            displayGameOverPanel();
             mmEffect(SFX_GAMEOVER);
+            displayGameOverPanel();
 
              if (keys & KEY_START){
 
@@ -169,8 +165,6 @@ int main(){
              }
 
         }
-
-    
         swiWaitForVBlank();
 
         oamUpdate(&oamMain);

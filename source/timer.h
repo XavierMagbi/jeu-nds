@@ -4,19 +4,12 @@
 #include <nds.h>
 #include <stdio.h>
 
-// Callback type for the timer
-typedef void (*TimerCallback)(void); 
+
 
 // Function prototypes
-void setTimerCallback(TimerCallback callback);
-void initTimer();
-void timer_ISR();
-void initSpeedTimer();  
-void speedTimerISR();
-void vblankHandler();
-void initSpeedSystem();
+void ScrollISR();
 void initScrollTimer();
-void scrollTimerISR();
+void disableScrollTimer();
 
 #endif
 

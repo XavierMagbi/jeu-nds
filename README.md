@@ -1,82 +1,71 @@
 # Flappy Bird for Nintendo DS
+🎮 Overview
+This project is a fully functional recreation of the Flappy Bird game for the Nintendo DS using the libnds development library. The game features smooth physics, dynamic background scrolling, interactive touch controls, and sound effects. Players control the bird by tapping the touch screen or pressing the B button to fly through moving pipes.
 
-## Overview
-This project is a recreation of the popular Flappy Bird game, designed and implemented for the Nintendo DS platform using the **libnds** development library. The game features smooth physics, jump mechanics, gravity simulation, and collision detection. Players navigate a bird by pressing the `A` button to jump while avoiding obstacles.
+# 🚀 Features
+Smooth Background Scrolling: The background scrolls smoothly in sync with the pipes for a seamless experience.
+Dynamic Speed Increase: The game speed increases linearly over time, raising the difficulty gradually.
+Gravity Simulation: Realistic gravity pulls the bird down unless the player makes it jump.
+Jump Mechanics: Press B or tap the bird on the sub-screen to make it jump.
+Collision Detection: The game ends when the bird touches pipes or the ground.
+Touchscreen Interaction: Tap the bird on the sub-screen to make it jump.
+Game Over Panel: Displays the score, distance, and a "Press Start to Restart" message.
+Background Switching: Alternates between two backgrounds each time the game restarts.
+Sound Effects: Sound plays when the bird jumps, when the game starts, and on game over.
+🎮 Gameplay
+# Main Menu:
 
-## Features
-- **Gravity Simulation**: The bird falls naturally due to gravity.
-- **Jump Mechanics**: Press the `A` button to make the bird jump upward.
-- **Collision Detection**: The bird stops when it hits the ground or the edges of the screen.
-- **Background Scrolling**: Smoothly scrolling background for a dynamic visual effect.
-- **Customizable Physics**: Easily tweak gravity, jump force, and other gameplay parameters.
+-> Displays a scrolling background and a blinking "Press Start to Play" message.
+-> Press Start to begin the game.
+-> During Gameplay:
 
-## Gameplay
-1. **Start Screen**: Upon launching the game, a message prompts the player to press the `START` button to begin.
-2. **Playing**: The bird stays fixed horizontally while jumping vertically to avoid falling. The objective is to navigate through gaps in pipes or other obstacles (not yet implemented).
-3. **Game Over**: The game stops if the bird touches the ground or flies out of bounds.
+-> Press B or tap Flappy on the sub-screen to make the bird jump.
+-> Avoid the pipes and stay in the air!
+# Game Over:
 
-## Controls
-- `A` Button: Makes the bird jump.
-- `START` Button: Starts the game from the main menu.
+A Game Over screen appears with the score and distance.
+Press Start to restart the game.
+Background Change:
 
-## Code Structure
-### Files
-1. **main.c**: Contains the main game loop and handles the game state transitions.
-2. **simulation.c** / **simulation.h**: Manages game initialization, reset, and bird physics.
-3. **graphics.c** / **graphics.h**: Handles sprite and background rendering.
-4. **timer.c** / **timer.h**: Implements timers for frame updates and animations.
+The background alternates between two styles every new game.
+🕹️ Controls
+B Button: Make the bird jump.
+Touch Screen: Tap the bird on the sub-screen to make it jump.
+Start Button: Starts the game or restarts after Game Over.
+🗂️ Code Structure
+📁 Files
+-> main.c – Handles the game loop and state transitions.
+-> graphics.c / graphics.h – Manages background, sprites, and visual elements.
+-> timer.c / timer.h – Controls background scrolling and speed scaling.
+-> soundbank.h / soundbank_bin.h – Manages sound effects.
+# 🔑 Key Functions
 
-### Key Functions
-- **initGame()**: Initializes game variables and state.
-- **handleInput()**: Handles user input (jump and start).
-- **updateBird()**: Applies gravity and updates the bird’s position.
-- **updateBackground()**: Scrolls the background for a dynamic effect.
-- **resetGame()**: Resets the game after a collision or game over.
+initMainScreenBackground() – Initializes the background (switches between two backgrounds).
+updateBackground() – Scrolls the background in sync with the pipes.
+updatePipes() – Moves pipes and checks for bird passage.
+checkCollisions() – Ends the game when the bird hits a pipe or the ground.
+displayGameOverPanel() – Displays the Game Over screen with the score.
+initScrollTimer() – Manages background scrolling speed.
+disableScrollTimer() – Stops the background from scrolling.
 
-## Physics Settings
-You can adjust the physics parameters in `simulation.c`:
-- **Gravity**: Change the `gravity` constant to make the bird fall faster or slower.
-- **Jump Force**: Modify `jumpForce` for higher or lower jumps.
-- **Ground Level**: Set the `groundLevel` constant for different ground positions.
+# 🎨 Assets
+Bird Sprite: 32x32 pixels.
+Pipes: 64x64 pixels, designed to scroll smoothly.
+Backgrounds: Two distinct backgrounds for variety.
+Menu Screen: Custom background with a blinking text prompt.
+🔄 Future Improvements
+Add a score counter displayed during gameplay.
+Introduce a medal system based on the score.
+Implement parallax scrolling for depth.
+Add a high score system to track the best runs.
+📜 License
+This project is open-source under the EPFL License.
+You are free to modify, distribute, and improve the game.
 
-## Installation
-### Prerequisites
-- DevkitPro/Libnds: Required for developing and running homebrew applications on the Nintendo DS.
-- GRIT: To convert assets (sprites, background) into NDS-compatible formats.
-
-### Steps
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-repo/flappy-bird-nds.git
-   ```
-2. Build the project using `make`:
-   ```bash
-   cd flappy-bird-nds
-   make
-   ```
-3. Transfer the `.nds` file to your Nintendo DS or emulator.
-4. Launch the game on your device/emulator.
-
-## Assets
-- **Bird Sprite**: A small 32x32 pixel sprite representing the bird.
-- **Background**: A scrolling tiled background depicting a city skyline.
-
-## How to Customize
-1. **Sprites**: Replace `bird.png` or `background.png` with your custom assets and use GRIT to convert them.
-2. **Physics**: Adjust the constants in `simulation.c` to change game dynamics.
-
-## Future Improvements
-- Add obstacles (pipes) for the bird to navigate.
-- Implement scoring based on the distance traveled.
-- Add sound effects for jumps and collisions.
-- Enhance background visuals with parallax scrolling.
-
-## License
-This project is open-source and released under the EPFL License. You are free to modify and distribute it as you like.
-
-## Acknowledgments
-- Inspired by the original Flappy Bird by Dong Nguyen.
-- Developed using **libnds** from the DevkitPro toolchain.
+# 🙏 Acknowledgments
+Inspired by the original Flappy Bird by Dong Nguyen.
+Developed using libnds from the DevkitPro toolchain.
+Sound system powered by MaxMod.
 
 --------------------------------------------------------------------------------------------------------------------------------
 

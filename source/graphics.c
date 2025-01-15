@@ -73,19 +73,12 @@ void resetPipe() {
     
         pipes[i].x = PIPE_INIT_X;
         pipes[i].y = PIPE_INIT_Y*i;
-        //setPipePosition(SPRITE_PIPE, PIPE_INIT_X , pipes[i].y);
       
     }
     
 }
 
-void updateBackground() {
-    
-    //scrollX = (scrollX + 1*speedMultiplier) % 256;
-    distance = distance + 1;//*speedMultiplier;
-    //REG_BG0HOFS = scrollX;   
-    //iprintf("\x1b[8;6H speedMultiplier: %d   ", speedMultiplier);
-}
+void updateBackground() {distance = distance + 1;}
 
 void setBirdPosition(int index, int x, int y) {
     oamSet(&oamMain, index, x, y, 0, 0, SpriteSize_32x32, SpriteColorFormat_256Color, birdgfx, -1, false, false, false, false, false);
@@ -120,13 +113,13 @@ void resetGame() {                    // Score réinitialisé
 
 void displayMenuScreen() {
     
-    // Configure sub-screen with BG0 for text
+    // Configure Main-screen with BG0 for text
     REG_DISPCNT = MODE_0_2D | DISPLAY_BG0_ACTIVE;
 
-    // Use VRAM C for sub-screen
+    // Use VRAM A for Main-screen
     VRAM_A_CR = VRAM_ENABLE | VRAM_A_MAIN_BG;
 
-    // Configure BG0 on the sub-screen
+    // Configure BG0 on the Main-screen
     BGCTRL[0] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(0) | BG_TILE_BASE(2);
 
     dmaCopy(MenuTiles, BG_TILE_RAM(2), MenuTilesLen);
@@ -138,7 +131,7 @@ void displayMenuScreen() {
     static bool showMessage = true;
     static int blinkCounter = 0;
 
-
+ 
     blinkCounter++;
     if (blinkCounter >= 30) {  // Blink every half second
         showMessage = !showMessage;
@@ -193,43 +186,6 @@ void initPipes() {
         }
     }
 }
-/*
-void updatePipes() {
-    int spriteIndex = 1;
-    for (int i = 0; i < NUM_PIPES; i++) {
-        pipes[i].x -= 1*speedMultiplier;
-
-        if (i % 2 == 0) {
-            // Set position for upper and lower pipes
-            setPipePositiondouble(spriteIndex, pipes[spriteIndex-1].x, pipes[spriteIndex].y, pipes[spriteIndex-1].y);
-            spriteIndex += 2;
-        }
-        
-        // Reset pipe if it moves off-screen
-        if (pipes[i].x + 90 < 0) {
-            pipes[i].x = SCREEN_WIDTH;
-
-            
-           if (i % 2 == 0) {
-                
-                int maxUpperY = 150 - PIPE_HEIGHT - PIPE_GAP;
-                pipes[i].y = rand() % (maxUpperY > 0 ? maxUpperY : 1); 
-                } else {
-                    
-                    pipes[i].y = pipes[i - 1].y + PIPE_HEIGHT + PIPE_GAP;
-
-                    if (pipes[i].y > 150) {
-                        pipes[i].y = 150;
-                    }
-                }
-
-            
-        }
-    }
-}
-
-*/
-
 
 // In your updatePipes function, add the passing detection logic
 void updatePipes(int *distance) {
@@ -295,17 +251,18 @@ void updateScore() {
 
 void initSubScreen() {
 
+    consoleClear();
+
     // Enable VRAM for the sub-screen
     VRAM_C_CR = VRAM_ENABLE | VRAM_C_SUB_BG;
 
     // Set display control for sub-screen
     REG_DISPCNT_SUB = MODE_0_2D | DISPLAY_BG1_ACTIVE;
 
-
-    // Configure BG1 for dynamic updates
+    // Configure BG1 for game info display
     BGCTRL_SUB[1] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(0) | BG_TILE_BASE(1);
 
-    // Load the background graphics
+    // Load the background graphics for sub screen
     dmaCopy(SubbgTiles, BG_TILE_RAM_SUB(1), SubbgTilesLen);
     dmaCopy(SubbgMap, BG_MAP_RAM_SUB(0), SubbgMapLen);
     dmaCopy(SubbgPal, BG_PALETTE_SUB, SubbgPalLen);
@@ -326,12 +283,10 @@ void UpdateSubScreen(){
 void displayGameOverScreen() {
 
    // Disable sprites to clear the game objects
-    disableSprites();
-
-    REG_BG0HOFS = 0;  
+   disableScrollTimer();
+   disableSprites();
 
     gameState = GAME_STATE_GAME_OVER;
-
 
     // Set VRAM_A for the Game Over background
     VRAM_A_CR = VRAM_ENABLE | VRAM_A_MAIN_BG;
@@ -341,43 +296,61 @@ void displayGameOverScreen() {
     BGCTRL[0] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(0) | BG_TILE_BASE(2);
 
     // Load the Game Over graphics (converted with GRIT)
-    dmaCopy(GameOverTiles, BG_TILE_RAM(2), GameOverTilesLen);
-    dmaCopy(GameOverMap, BG_MAP_RAM(0), GameOverMapLen);
-    dmaCopy(GameOverPal, BG_PALETTE, GameOverPalLen);
+    dmaCopy(gameoverTiles, BG_TILE_RAM(2), gameoverTilesLen);
+    dmaCopy(gameoverMap, BG_MAP_RAM(0), gameoverMapLen);
+    dmaCopy(gameoverPal, BG_PALETTE, gameoverPalLen);
     
-}
-
-void clearSubScreenBackgrounds() {
-    // Disable all backgrounds on the sub screen
-    REG_DISPCNT_SUB &= ~(DISPLAY_BG0_ACTIVE | DISPLAY_BG1_ACTIVE | DISPLAY_BG2_ACTIVE | DISPLAY_BG3_ACTIVE);
-
-    // Disable all sub background controls
-    BGCTRL_SUB[0] = 0;
-    BGCTRL_SUB[1] = 0;
-    BGCTRL_SUB[2] = 0;
-    BGCTRL_SUB[3] = 0;
-
-    // Clear the text console
-    consoleClear();
 }
 
 void displayGameOverPanel(){
 
-    consoleClear();
+    REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;  // Disable BG0 on the sub-screen
 
-    // Draw the Game Over tex
-    iprintf("\x1b[5;8H GAME OVER");
+    // Configurer BG0 en mode texte 4 bits par pixel (16 couleurs)
+    BGCTRL_SUB[1] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(0) | BG_TILE_BASE(3);
 
-    // Draw the box for score and distance
+    // Initialiser la console pour pouvoir écrire du texte sur BG0
+    consoleInit(
+        NULL,               // Utiliser la console par défaut
+        0,                  // Background 0
+        BgType_Text4bpp,    // Mode texte 4 bits par pixel
+        BgSize_T_256x256,   // Taille du background 256x256
+        0,                  // Base de la map
+        2,                  // Base des tiles
+        false,               // Ecran principal
+        true                // Charger les graphismes par défaut
+    );
+    
+    // Draw the centered Game Over text
+    iprintf("\x1b[5;12H GAME OVER");
+    
+    // Draw the centered box for score and distance
+    iprintf("\x1b[8;11HSCORE: %d", score);
+    iprintf("\x1b[10;11HDIST:  %d m", distance);
 
-    iprintf("\x1b[8;6H   SCORE: %d       ", score);
-    iprintf("\x1b[10;6H  DIST:  %d   m   ", distance);
+    static bool showMessage = true;
+    static int blinkCounter = 0;
+
+ 
+    blinkCounter++;
+    if (blinkCounter >= 30) {  // Blink every half second
+        showMessage = !showMessage;
+        blinkCounter = 0;
+    }
 
 
-    // Instruction to restart
-    iprintf("\x1b[13;5HPRESS START TO RESTART");
+    if (showMessage) {
+        iprintf("\x1b[13;12HPRESS START ");
+        iprintf("\x1b[15;12HTO RESTART ");
+    } else {
+        iprintf("\x1b[13;12H                     ");  // Clear text
+        iprintf("\x1b[15;12H                     ");  // Clear text
+    }
+    
+    
+    
+
 }
-
 
 void checkCollisions() {
     // Check ground and ceiling collision
