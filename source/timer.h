@@ -15,6 +15,8 @@ void initSpeedTimer();
 void speedTimerISR();
 void vblankHandler();
 void initSpeedSystem();
+void initScrollTimer();
+void scrollTimerISR();
 
 #endif
 

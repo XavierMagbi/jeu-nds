@@ -52,8 +52,13 @@ int main(){
     consoleDemoInit();
 
     //Init the Timer to increase the speed of the game 
-    initSpeedTimer();
-
+    //initSpeedTimer(); *****YOUR TIMER
+    //////MY TIMER BEGIN
+    irqInit();               // Initialize the interrupt system
+    irqEnable(IRQ_VBLANK);   // Enable V-Blank interrupt (commonly used)
+    irqEnable(IRQ_KEYS);     // Enable keypad interrupt
+    REG_IME = 1; 
+    //////END
 
     // SOUND 
 
@@ -66,6 +71,9 @@ int main(){
     mmLoadEffect(SFX_INTRO);
 
     gameState = GAME_STATE_MENU;
+    initScrollTimer();
+
+
 
     while (1) {
         
@@ -86,6 +94,7 @@ int main(){
         if (keys & KEY_START) {
             consoleClear();
             mmEffect(SFX_START);
+            irqEnable(IRQ_TIMER0);
             gameState = GAME_STATE_INIT;
         }
     }
@@ -115,11 +124,12 @@ int main(){
 
             if (keys & KEY_A) {
                 gameState = GAME_STATE_PLAYING;
+                irqEnable(IRQ_TIMER0);
             }
         }
         if (gameState == GAME_STATE_PLAYING) {
 
-            speedTimerISR();
+            //speedTimerISR();
             updateBackground();
             //UpdateSubScreen(); 
     
@@ -140,7 +150,7 @@ int main(){
             checkCollisions(); // Check for collisions
             setBirdPosition(SPRITE_BIRD,birdX,birdY);
 
-            updatePipes();
+            updatePipes(&distance);
             updateScore();
             
             

@@ -1,9 +1,12 @@
 #include "timer.h"
+#include <nds/arm9/background.h>
+#include <nds.h>
+#include <stdio.h>
 
 // Global Variables
 static TimerCallback gameUpdateCallback = NULL; 
 int speedMultiplier = 1; 
-
+int scrollX = 0;
 // Timer Functions
 void setTimerCallback(TimerCallback callback) {
     gameUpdateCallback = callback;
@@ -42,6 +45,23 @@ void initSpeedTimer() {
     irqEnable(IRQ_TIMER1);
 }
 
+
+
+void testISR() {
+    //iprintf("Test ISR triggered!\n");
+    scrollX = (scrollX + 1) % 256; // Increment scroll position
+    REG_BG0HOFS = scrollX; 
+}
+
+void initScrollTimer() {
+    
+    TIMER0_CR = TIMER_ENABLE | TIMER_DIV_64 | TIMER_IRQ_REQ; // Enable Timer0 with 1/1024 prescaler
+    TIMER0_DATA = TIMER_FREQ_64(50);         // Set the timer for a 1-second interval
+    irqSet(IRQ_TIMER0, &testISR);              // Attach the ISR
+     
+
+    
+}
 
 
 

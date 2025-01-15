@@ -15,6 +15,7 @@
 #define GROUNDLEVEL 128
 #define JUMPFORCE -10 
 #define GRAVITY 1
+#define SPEED_DIST 500
 
 // Sprite indices
 #define SPRITE_BIRD 0
@@ -91,7 +92,7 @@ void drawpipe();
 // Pipes initialization & Updates 
 void drawPipes();
 void initPipes();
-void updatePipes();
+void updatePipes(int *distance);
 void setPipePosition(int index, int x, int y);
 
 // BAckground Initialization & Update 

@@ -20,7 +20,7 @@
 
 // Global variables 
 
-int scrollX = 0;
+//int scrollX = 0;
 u16 *birdgfx;
 u16 *Pipegfx;
 u16 *Pipegfx2;
@@ -30,6 +30,7 @@ Pipe pipes[NUM_PIPES];
 
 
 extern int speedMultiplier; 
+int distance_coef = 1;
 bool background = true; // To switch with the two backgrounds 
 
 
@@ -80,10 +81,10 @@ void resetPipe() {
 
 void updateBackground() {
     
-    scrollX = (scrollX + 1*speedMultiplier) % 256;
-    distance = distance + 1*speedMultiplier;
-    REG_BG0HOFS = scrollX;   
-    iprintf("\x1b[8;6H speedMultiplier: %d   ", speedMultiplier);
+    //scrollX = (scrollX + 1*speedMultiplier) % 256;
+    distance = distance + 1;//*speedMultiplier;
+    //REG_BG0HOFS = scrollX;   
+    //iprintf("\x1b[8;6H speedMultiplier: %d   ", speedMultiplier);
 }
 
 void setBirdPosition(int index, int x, int y) {
@@ -109,7 +110,8 @@ void resetGame() {                    // Score réinitialisé
     gameState = GAME_STATE_INIT; // Retour à l'état d'attente
     birdX = BIRDX_INIT;
     birdY = BIRDY_INIT;
-
+    irqDisable(IRQ_TIMER0);
+    distance_coef = 1;
     //resetPipe();
     background = !background;
     consoleClear();     // Efface l'écran de la console   
@@ -230,11 +232,15 @@ void updatePipes() {
 
 
 // In your updatePipes function, add the passing detection logic
-void updatePipes() {
+void updatePipes(int *distance) {
     int spriteIndex = 1;
-    
+    if((*distance)>SPEED_DIST*distance_coef ){
+            speedMultiplier +=1;
+            distance_coef++;
+        }
     for (int i = 0; i < NUM_PIPES; i++) {
         // Update pipe position
+        
         pipes[i].x -= 1*speedMultiplier;
 
         
