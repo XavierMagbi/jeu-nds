@@ -23,19 +23,29 @@ void timer_ISR() {
     }
 }
 
-void initSpeedTimer() {
-    TIMER1_CR = TIMER_ENABLE | TIMER_DIV_1024;
-    TIMER1_DATA = TIMER_FREQ_1024(10); // Every 10 seconds
-
-    irqSet(IRQ_TIMER1, speedTimerISR);
-    irqEnable(IRQ_TIMER1);
-}
-
 void speedTimerISR() {
-    if (speedMultiplier < 5) {
+    static int seconds = 0;
+    seconds++;
+    
+    if (seconds%10 == 0 &&  speedMultiplier < 4) {  // Every 10 seconds
         speedMultiplier++;
     }
 }
+
+void initSpeedTimer() {
+    // Set timer to trigger once per second
+    TIMER1_DATA = TIMER_FREQ_1024(1);  // Count down from 32 instead of 1
+    TIMER1_CR = TIMER_ENABLE | TIMER_DIV_1024;
+    
+
+    irqSet(IRQ_TIMER1, &speedTimerISR);
+    irqEnable(IRQ_TIMER1);
+}
+
+
+
+
+
 
 
 

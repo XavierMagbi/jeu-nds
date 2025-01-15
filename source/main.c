@@ -17,7 +17,6 @@ int keys;
 // Variables for Game
 int score = 0;    
 int distance = 0;
-int bestScore = 0;
 
 // Variables of the bird 
 int birdX = BIRDX_INIT; // Center of the screen horizontally
@@ -48,11 +47,12 @@ void checkTouchInput() {
     }
 }
 
-
 int main(){
 
-
     consoleDemoInit();
+
+    //Init the Timer to increase the speed of the game 
+    initSpeedTimer();
 
 
     // SOUND 
@@ -91,11 +91,14 @@ int main(){
     }
 
     if(gameState == GAME_STATE_INIT){
+        
+             
 
-          // Init Backgrounds
+             // Init Backgrounds
              initMainScreenBackground();
              //initSubScreen();
-             
+
+           
              // Configuration of  sprites 
              configureSprites();
              oamInit(&oamMain, SpriteMapping_1D_32, false);
@@ -116,6 +119,7 @@ int main(){
         }
         if (gameState == GAME_STATE_PLAYING) {
 
+            speedTimerISR();
             updateBackground();
             //UpdateSubScreen(); 
     

@@ -79,10 +79,11 @@ void resetPipe() {
 }
 
 void updateBackground() {
-    speedTimerISR();
-    scrollX = (scrollX + 1) % 256;
-    distance = distance + 1;
+    
+    scrollX = (scrollX + 1*speedMultiplier) % 256;
+    distance = distance + 1*speedMultiplier;
     REG_BG0HOFS = scrollX;   
+    iprintf("\x1b[8;6H speedMultiplier: %d   ", speedMultiplier);
 }
 
 void setBirdPosition(int index, int x, int y) {
@@ -111,13 +112,12 @@ void resetGame() {                    // Score réinitialisé
 
     //resetPipe();
     background = !background;
-    consoleClear();                // Efface l'écran de la console   
+    consoleClear();     // Efface l'écran de la console   
 }
 
 
 void displayMenuScreen() {
-    consoleClear();
-
+    
     // Configure sub-screen with BG0 for text
     REG_DISPCNT = MODE_0_2D | DISPLAY_BG0_ACTIVE;
 
@@ -131,7 +131,6 @@ void displayMenuScreen() {
     dmaCopy(MenuMap, BG_MAP_RAM(0), MenuMapLen);
     dmaCopy(MenuPal, BG_PALETTE, MenuPalLen);
 
-    
     
 
     static bool showMessage = true;
@@ -163,17 +162,12 @@ void configureSprites(){
     oamInit(&oamMain, SpriteMapping_1D_32, false);
     birdgfx = oamAllocateGfx(&oamMain, SpriteSize_32x32, SpriteColorFormat_256Color);
     Pipegfx = oamAllocateGfx(&oamMain, SpriteSize_64x64, SpriteColorFormat_256Color);
-    //Pipegfx2 = oamAllocateGfx(&oamMain, SpriteSize_64x64, SpriteColorFormat_256Color);
 
     // Load bird sprite palette and tiles
     dmaCopy(birdPal, SPRITE_PALETTE , birdPalLen); // Load bird palette at index 0
-    //dmaCopy(pipe1Pal, &SPRITE_PALETTE[birdPalLen/2], pipe1PalLen);
     dmaCopy(pipe2Pal, &SPRITE_PALETTE[birdPalLen/2], pipe2PalLen);
-    //dmaCopy(pipe1Pal, &SPRITE_PALETTE[pipe1PalLen/2], pipe1PalLen);
     dmaCopy(birdTiles, birdgfx, birdTilesLen); // Load bird tiles
-    //dmaCopy(pipe1Tiles , Pipegfx, pipe1TilesLen);   // Load pipe tiles
     dmaCopy(pipe2Tiles , Pipegfx, pipe2TilesLen);   // Load pipe tiles
-    //dmaCopy(pipe1Tiles , Pipegfx2, pipe1TilesLen);              // Load bird tiles
 
 }
 
@@ -183,8 +177,6 @@ void disableSprites() {
     }
     oamUpdate(&oamMain);
 }
-
-
 
 void initPipes() {
     for (int i = 0; i < NUM_PIPES; i++) {
@@ -199,12 +191,11 @@ void initPipes() {
         }
     }
 }
-
-
+/*
 void updatePipes() {
     int spriteIndex = 1;
     for (int i = 0; i < NUM_PIPES; i++) {
-        pipes[i].x -= 1;
+        pipes[i].x -= 1*speedMultiplier;
 
         if (i % 2 == 0) {
             // Set position for upper and lower pipes
@@ -235,18 +226,64 @@ void updatePipes() {
     }
 }
 
-void updateScore() {
+*/
 
+
+// In your updatePipes function, add the passing detection logic
+void updatePipes() {
+    int spriteIndex = 1;
     
-    for (int i = 0; i < NUM_PIPES; i++){
+    for (int i = 0; i < NUM_PIPES; i++) {
+        // Update pipe position
+        pipes[i].x -= 1*speedMultiplier;
 
-        if (birdX == pipes[i].x + PIPE_WIDTH && (i % 2 == 0)  ) { // Passed the pipe
-            
-            score++;
-            //iprintf("Score: %d\n", score);
+        
+        // Check if pipe has been passed
+        // Assuming player is at x=90 (based on your collision check)
+        // We check if the pipe has moved to the left of the player
+        // and hasn't been marked as passed yet
+        if (!pipes[i].passed && birdX == pipes[i].x + PIPE_WIDTH && (i % 2 == 0)) {
+            pipes[i].passed = true;
+            // Here you can increment score or trigger other events
+            // for successfully passing a pipe
         }
         
+        if (i % 2 == 0) {
+            // Set position for upper and lower pipes
+            setPipePositiondouble(spriteIndex, pipes[spriteIndex-1].x, pipes[spriteIndex].y, pipes[spriteIndex-1].y);
+            spriteIndex += 2;
+        }
+        
+        // Reset pipe if it moves off-screen
+        if (pipes[i].x + 90 < 0) {
+            pipes[i].x = SCREEN_WIDTH;
+            pipes[i].passed = false;  // Reset the passed flag when recycling the pipe
+            
+            if (i % 2 == 0) {
+                int maxUpperY = 150 - PIPE_HEIGHT - PIPE_GAP;
+                pipes[i].y = rand() % (maxUpperY > 0 ? maxUpperY : 1);
+            } else {
+                pipes[i].y = pipes[i - 1].y + PIPE_HEIGHT + PIPE_GAP;
+                
+                if (pipes[i].y > 150) {
+                    pipes[i].y = 150;
+                }
+            }
+        }
     }
+}
+
+void updateScore() {
+    
+    for (int i = 0; i < NUM_PIPES; i++){
+        
+        if (birdX == pipes[i].x + PIPE_WIDTH && (i % 2 == 0) && pipes[i].passed == true) 
+        { // Passed the pipe
+        
+        score++;}
+        
+    }
+        
  }
 
 
@@ -281,8 +318,6 @@ void UpdateSubScreen(){
 
 
 void displayGameOverScreen() {
-
-     
 
    // Disable sprites to clear the game objects
     disableSprites();
@@ -328,11 +363,10 @@ void displayGameOverPanel(){
     iprintf("\x1b[5;8H GAME OVER");
 
     // Draw the box for score and distance
-    iprintf("\x1b[7;6H+------------------+");
-    iprintf("\x1b[8;6H|   SCORE: %d       |", score);
-    iprintf("\x1b[9;6H|   BEST:  %d       |", bestScore);
-    iprintf("\x1b[10;6H|  DIST:  %d   m   |", distance);
-    iprintf("\x1b[11;6H+------------------+");
+
+    iprintf("\x1b[8;6H   SCORE: %d       ", score);
+    iprintf("\x1b[10;6H  DIST:  %d   m   ", distance);
+
 
     // Instruction to restart
     iprintf("\x1b[13;5HPRESS START TO RESTART");

@@ -55,7 +55,8 @@ typedef struct {
     int x;            // Position horizontale du pipe
     int y;            // Position verticale du haut du gap
     int width;        // Largeur du pipe
-    int height;       // Hauteur du pipe (si nécessaire)
+    int height;
+    bool passed;       // Hauteur du pipe (si nécessaire)
 } Pipe;
 
 
@@ -63,7 +64,6 @@ extern Pipe pipes[NUM_PIPES];
 extern int sprite_num[NUM_PIPES];
 extern int score ;    // Initial Score 
 extern int distance; // Intial Distance
-extern int bestScore;
 
 
 // Bird's variable

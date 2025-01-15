@@ -13,6 +13,8 @@ void initTimer();
 void timer_ISR();
 void initSpeedTimer();  
 void speedTimerISR();
+void vblankHandler();
+void initSpeedSystem();
 
 #endif
 
