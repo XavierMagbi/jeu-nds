@@ -100,9 +100,6 @@ void setPipePositiondouble(int index, int x, int y, int z ) {
     oamSet(&oamMain, index+5, x, -22, 0, 0, SpriteSize_64x64, SpriteColorFormat_256Color, Pipegfx, -1, false, false, false, false, false); //UP CORRECT
 }
 
-
-
-
 // Fonction pour réinitdistance_coefialiser le jeu en cas de Game Over
 void resetGame() {                    // Score réinitialisé
     gameState = GAME_STATE_INIT; // Retour à l'état d'attente
@@ -152,11 +149,8 @@ void displayMenuScreen() {
     } else {
         iprintf("\x1b[10;5H                     ");  // Clear text
     }
-    
-
-    
+   
 }
-
 
 void configureSprites(){
      // Map VRAM_B for the bird sprite
@@ -320,14 +314,14 @@ void displayGameOverPanel(){
 
     // Initialiser la console pour pouvoir écrire du texte sur BG0
     consoleInit(
-        NULL,               // Utiliser la console par défaut
-        0,                  // Background 0
-        BgType_Text4bpp,    // Mode texte 4 bits par pixel
-        BgSize_T_256x256,   // Taille du background 256x256
-        0,                  // Base de la map
-        2,                  // Base des tiles
-        false,               // Ecran principal
-        true                // Charger les graphismes par défaut
+        NULL,               // Use the default console
+        0,                 // Background 0
+        BgType_Text4bpp,    // 4-bit text mode
+        BgSize_T_256x256,  // Background size 256x256
+        0,                 // Map base
+        2,                 // Tiles base
+        false,             // Main screen
+        true               // Load default graphics
     );
     
     // Draw the centered Game Over text
@@ -356,11 +350,7 @@ void displayGameOverPanel(){
         iprintf("\x1b[15;12H                     ");  // Clear text
     }
     
-    
-    
-
 }
-
 void checkCollisions() {
     // Check ground and ceiling collision
     if (birdY >= GROUNDLEVEL || birdY <= 0) {
@@ -388,7 +378,5 @@ void checkCollisions() {
                 
                     }
             }
-        }
-        
-        
+        }  
  }

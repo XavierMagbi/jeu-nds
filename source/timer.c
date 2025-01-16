@@ -8,7 +8,6 @@ int speedMultiplier = 1;
 int scrollX = 0;
 
 
-
 void ScrollISR() {
     //iprintf("Test ISR triggered!\n");
     scrollX = (scrollX + 1*speedMultiplier) % 256; // Increment scroll position

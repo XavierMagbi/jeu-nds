@@ -12,7 +12,7 @@
 #include "soundbank_bin.h"
 
 
-int keys; 
+int keys; // Keys
 
 // Variables for Game
 int score = 0;    

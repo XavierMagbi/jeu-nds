@@ -4,9 +4,7 @@
 #include <nds.h>
 #include <stdio.h>
 
-
-
-// Function prototypes
+// Function to make the background scrolling 
 void ScrollISR();
 void initScrollTimer();
 void disableScrollTimer();

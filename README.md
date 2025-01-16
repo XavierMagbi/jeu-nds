@@ -53,11 +53,11 @@ Bird Sprite: 32x32 pixels.
 Pipes: 64x64 pixels, designed to scroll smoothly.
 Backgrounds: Two distinct backgrounds for variety.
 Menu Screen: Custom background with a blinking text prompt.
-🔄 Future Improvements
-Add a score counter displayed during gameplay.
+🔄 Possible Improvements
 Introduce a medal system based on the score.
 Implement parallax scrolling for depth.
 Add a high score system to track the best runs.
+
 📜 License
 This project is open-source under the EPFL License.
 You are free to modify, distribute, and improve the game.
