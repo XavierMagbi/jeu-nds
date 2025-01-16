@@ -17,6 +17,8 @@ int keys;
 // Variables for Game
 int score = 0;    
 int distance = 0;
+static bool gameover = false;
+static bool music_start = false;
 
 // Variables of the bird 
 int birdX = BIRDX_INIT; // Center of the screen horizontally
@@ -30,20 +32,19 @@ int gameState = GAME_STATE_INIT; // Game's State
 
 
 
-void checkTouchInput() {
+void checkTouchInput(mm_sound_effect jumpSound) {
     touchPosition touch;
-    scanKeys();
-    int keys = keysDown();
-    
+
     if (keys & KEY_TOUCH) {
         touchRead(&touch);
 
         // Check if Flappy on the sub-screen is touched
-        if (touch.px >= 112 && touch.px <= 144 && touch.py >= 96 && touch.py <= 128) {
+        if (touch.px >= 70 && touch.px <= 170 && touch.py >= 60 && touch.py <= 120) {
             // Trigger jump in the main game
             birdY += JUMPFORCE;
-            mmEffect(SFX_JUMP);  // Play jump sound effect
+            mmEffectEx(&jumpSound);   // Play jump sound effect
         }
+        
     }
 }
 
@@ -62,45 +63,40 @@ int main(){
     mmLoadEffect(SFX_JUMP);
     mmLoadEffect(SFX_START);
     mmLoadEffect(SFX_GAMEOVER);
-    mmLoadEffect(SFX_INTRO);
+    mmLoad(MOD_MUSIC);
+
+    mm_sound_effect jumpSound = {
+    { SFX_JUMP }, // Sound ID
+    (int)(1.0f * (1 << 10)), 
+    0, // Handle
+    50, // Volume 
+    128 // Panning 
+};
 
     gameState = GAME_STATE_MENU;
-
-
+    
 
     while (1) {
         
         scanKeys();
         keys = keysDown();
+       
         
     if (gameState == GAME_STATE_MENU) {
-        
-        static bool introPlayed = false;
-        
-        if (!introPlayed) {
-            mmEffect(SFX_INTRO);
-            introPlayed = true;
-        }
         
         displayMenuScreen();
         
         if (keys & KEY_START) {
             consoleClear();
-            mmEffect(SFX_START);
+           
             irqEnable(IRQ_TIMER0);
             gameState = GAME_STATE_INIT;
+            
         }
     }
 
     if(gameState == GAME_STATE_INIT){
 
-        
-          
-             //Init the Timer to increase the speed of the game 
-            irqInit();               // Initialize the interrupt system
-            irqEnable(IRQ_VBLANK);   // Enable V-Blank interrupt (commonly used)
-            irqEnable(IRQ_KEYS);    // Enable keypad interrupt
-            REG_IME = 1; 
 
              // Init Backgrounds
              initMainScreenBackground();
@@ -121,18 +117,29 @@ int main(){
     }
     
     if (gameState == GAME_STATE_WAITING) {
+            if (!music_start) {
+            mmStart(MOD_MUSIC,MM_PLAY_LOOP);
+            mmSetModuleVolume(100);
+            music_start = true;
+            }
 
-            if (keys & KEY_A) {
+
+
+            if ((keys & KEY_B) || (keys & KEY_TOUCH)) {
                 gameState = GAME_STATE_PLAYING;
                 irqEnable(IRQ_TIMER0);
                 initScrollTimer();
+                
             }
         }
         if (gameState == GAME_STATE_PLAYING) {
 
             updateBackground();
             UpdateSubScreen(); 
-    
+                   
+
+
+
             if (birdY < GROUNDLEVEL) {
                 birdY += 0.5;
             } 
@@ -140,11 +147,12 @@ int main(){
                 birdY = GROUNDLEVEL; 
             }
 
-            checkTouchInput();
+            checkTouchInput(jumpSound);
 
             
             if ((keys & KEY_B) && birdY > 0) {
-                mmEffect(SFX_JUMP); 
+                
+                mmEffectEx(&jumpSound); 
                 birdY += JUMPFORCE ;
             }
 
@@ -156,11 +164,18 @@ int main(){
         }
 
         if(gameState == GAME_STATE_GAME_OVER){
-            mmEffect(SFX_GAMEOVER);
+            
             displayGameOverPanel();
+            if (!gameover) {
+            mmEffect(SFX_GAMEOVER);
+            gameover = true;
+        }
+
 
              if (keys & KEY_START){
-
+                music_start = false;
+                gameover = false;
+                distance = 0;
                 resetGame();
              }
 

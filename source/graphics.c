@@ -17,6 +17,11 @@
 #include "GameOver.h"
 #include "Menu.h"
 
+// Library for Sounds
+#include <maxmod9.h>
+#include "soundbank.h"
+#include "soundbank_bin.h"
+
 
 // Global variables 
 
@@ -98,16 +103,19 @@ void setPipePositiondouble(int index, int x, int y, int z ) {
 
 
 
-// Fonction pour réinitialiser le jeu en cas de Game Over
+// Fonction pour réinitdistance_coefialiser le jeu en cas de Game Over
 void resetGame() {                    // Score réinitialisé
     gameState = GAME_STATE_INIT; // Retour à l'état d'attente
     birdX = BIRDX_INIT;
     birdY = BIRDY_INIT;
     irqDisable(IRQ_TIMER0);
     distance_coef = 1;
-    //resetPipe();
+    speedMultiplier = 1;
+    
+    
     background = !background;
     consoleClear();     // Efface l'écran de la console   
+    printf("Speed Multiplier: %d\n", speedMultiplier);
 }
 
 
@@ -190,8 +198,9 @@ void initPipes() {
 // In your updatePipes function, add the passing detection logic
 void updatePipes(int *distance) {
     int spriteIndex = 1;
+
     if((*distance)>SPEED_DIST*distance_coef ){
-            speedMultiplier +=1;
+            speedMultiplier ++;
             distance_coef++;
         }
     for (int i = 0; i < NUM_PIPES; i++) {
@@ -282,10 +291,10 @@ void UpdateSubScreen(){
 
 void displayGameOverScreen() {
 
-   // Disable sprites to clear the game objects
-   disableScrollTimer();
-   disableSprites();
-
+    // Disable sprites to clear the game objects
+    disableScrollTimer();
+    disableSprites();
+    mmStop();
     gameState = GAME_STATE_GAME_OVER;
 
     // Set VRAM_A for the Game Over background
@@ -296,9 +305,9 @@ void displayGameOverScreen() {
     BGCTRL[0] = BG_32x32 | BG_COLOR_256 | BG_MAP_BASE(0) | BG_TILE_BASE(2);
 
     // Load the Game Over graphics (converted with GRIT)
-    dmaCopy(gameoverTiles, BG_TILE_RAM(2), gameoverTilesLen);
-    dmaCopy(gameoverMap, BG_MAP_RAM(0), gameoverMapLen);
-    dmaCopy(gameoverPal, BG_PALETTE, gameoverPalLen);
+    dmaCopy(GameOverTiles, BG_TILE_RAM(2), GameOverTilesLen);
+    dmaCopy(GameOverMap, BG_MAP_RAM(0), GameOverMapLen);
+    dmaCopy(GameOverPal, BG_PALETTE, GameOverPalLen);
     
 }
 
@@ -356,6 +365,7 @@ void checkCollisions() {
     // Check ground and ceiling collision
     if (birdY >= GROUNDLEVEL || birdY <= 0) {
         // Collision with ground or ceiling
+        mmEffect(SFX_JUMP);
         displayGameOverScreen();
         return;
     }
